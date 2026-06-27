@@ -10,7 +10,7 @@
     <view class="nav-right">⋯</view>
   </view>
 
-  <scroll-view class="chat-content" scroll-y enhanced>
+  <scroll-view class="chat-content" scroll-y enhanced scroll-into-view="{{scrollIntoView}}" scroll-with-animation>
     <view class="connection {{connected ? 'connection-ok' : 'connection-warn'}}" bindtap="checkConnection">
       <text wx:if="{{loading}}">服务检测中...</text>
       <text wx:elif="{{connected}}">服务已连接 · {{pingResult.version}}</text>
@@ -18,14 +18,14 @@
     </view>
 
     <block wx:for="{{messages}}" wx:key="id">
-      <view wx:if="{{item.role == 'user'}}" class="msg user" id="msg-{{item.id}}">
+      <view wx:if="{{item.type == 'user'}}" class="msg user" id="msg-{{item.id}}">
         <view class="bubble">
-          <view wx:if="{{item.image}}" class="bubble-img">识别：{{item.image}}</view>
+          <view wx:if="{{item.imageLabel}}" class="bubble-img">图片模式：{{item.imageLabel}}</view>
           <view>{{item.text}}</view>
         </view>
       </view>
 
-      <view wx:else class="msg bot" id="msg-{{item.id}}">
+      <view wx:else class="msg bot {{item.type == 'loading' ? 'loading' : ''}}" id="msg-{{item.id}}">
         <view class="agent-label" wx:if="{{item.agentMeta}}">
           <text class="dot">●</text>{{item.agentMeta.name}}<text wx:if="{{item.agentMeta.desc}}"> · {{item.agentMeta.desc}}</text>
         </view>
@@ -38,15 +38,15 @@
           <view wx:if="{{item.route}}" class="route">识别意图：<text>{{item.route.intent}}</text>（{{item.route.confidenceText}}）</view>
           <view class="t" wx:if="{{item.reply.title}}">{{item.reply.title}}</view>
           <block wx:if="{{item.reply.blocks}}">
-            <view wx:for="{{item.reply.blocks}}" wx:for-item="b" wx:key="label" class="kv">
+            <view wx:for="{{item.reply.blocks}}" wx:for-item="b" wx:key="label" class="kv {{b.type == 'danger' ? 'danger-block' : ''}}">
               <view wx:if="{{b.type == 'warn'}}" class="warn">{{b.text}}</view>
               <view wx:else>
                 <text class="kv-label">{{b.label}}：</text>
-                <text class="{{b.danger ? 'red' : b.good ? 'green' : ''}}">{{b.value}}</text>
+                <text class="{{b.type == 'danger' || b.danger ? 'red' : b.good ? 'green' : ''}}">{{b.value}}</text>
               </view>
             </view>
           </block>
-          <view class="price" wx:if="{{item.reply.price_text}}">💰 {{item.reply.price_text}}</view>
+          <view class="price" wx:if="{{item.reply.price_text}}">{{item.reply.price_text}}</view>
           <view class="legal" wx:if="{{item.legal_note}}">{{item.legal_note}}</view>
         </view>
       </view>
@@ -58,11 +58,10 @@
 
   <view class="chat-input-bar">
     <scroll-view class="chips" scroll-x enhanced show-scrollbar="{{false}}">
-      <text class="chip" bindtap="quickAsk" data-text="发动机有咕噜咕噜的异响，加速时更明显">🎙 口语描述</text>
-      <text class="chip" bindtap="quickAsk" data-text="仪表盘亮黄灯，读码显示 P0300">⚠ 故障码</text>
-      <text class="chip" bindtap="uploadImage" data-type="brake">📷 拍刹车片</text>
-      <text class="chip" bindtap="uploadImage" data-type="bill">📷 拍报价单</text>
-      <text class="chip" bindtap="quickAsk" data-text="4S店报价 1200 元，合理吗？">💰 报价</text>
+      <text class="chip" bindtap="quickAsk" data-text="咕噜咕噜响">症状：咕噜咕噜响</text>
+      <text class="chip" bindtap="quickAsk" data-text="P0300 是什么意思">故障码：P0300</text>
+      <text class="chip" bindtap="quickAsk" data-text="800 元换机油机滤合理吗">报价：机油机滤</text>
+      <text class="chip" bindtap="quickAsk" data-text="拍报价单" data-mode="image" data-image-label="报价单">图片：拍报价单</text>
     </scroll-view>
     <view class="chat-input-row">
       <textarea
@@ -73,7 +72,7 @@
         bindinput="onInput"
         maxlength="500"
       />
-      <button class="send" bindtap="send" disabled="{{!inputText || loadingAgent}}">发送</button>
+      <button class="send" bindtap="send" disabled="{{!canSend || loadingAgent}}">发送</button>
     </view>
   </view>
 
