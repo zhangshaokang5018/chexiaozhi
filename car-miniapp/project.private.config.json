@@ -2,7 +2,7 @@
   "libVersion": "2.32.3",
   "projectname": "car-miniapp",
   "setting": {
-    "urlCheck": true,
+    "urlCheck": false,
     "coverView": false,
     "lazyloadPlaceholderEnable": false,
     "skylineRenderEnable": true,
