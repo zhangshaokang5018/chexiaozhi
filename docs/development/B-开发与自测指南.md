@@ -35,6 +35,11 @@ car-server/
 ```
 
 > 协作约定见 `docs/development/工程协作约定.md`：只改自己归属的文件、`app.py` 不要碰、`knowledge/` 由你独家写。
+>
+> **RAG 已接入（完全本地）**：症状库/成本库/**故障码库**用本地模型 `BAAI/bge-small-zh-v1.5` + 本地 Chroma 做语义检索（`services/rag.py`），**无需任何 API Key、离线运行**。
+> - `maintain`（成本）：关键词优先 + RAG 兜底。
+> - **故障码库**：每条绑定 `code`/`desc`/`plain`(小白解释) 三字段，`/api/kb/dtc?q=` 支持「精确码优先 → RAG 语义 → 关键词兜底」，用代码或大白话描述都能搜到整条。
+> - 配置/建索引见 `后端服务启动说明.md` 3.5 节（首次建索引会下载约 100MB 模型，仅此一次联网）。LangGraph 仍未引入（agent 为普通函数）。
 
 ### 0.2 你和 A 的接口契约（必须遵守）
 
@@ -69,9 +74,9 @@ MVP 只做这些接口，**不要**自行新增 `/api/feedback`、`/api/receipts
 | 2 | B2-3 维修成本知识库 kb_cost.json | [x] |
 | 2 | B2-4 GET /api/kb/<kind> 接口 | [x] |
 | 2 | B2-5 报价审核 Agent（maintain） | [x] |
-| 3 | B3-1 services/context.py + VIN 脱敏 | [ ] |
-| 3 | B3-2 GET/POST /api/context | [ ] |
-| 3 | B3-3 services/receipt.py + POST /api/receipt | [ ] |
+| 3 | B3-1 services/context.py + VIN 脱敏 | [x] |
+| 3 | B3-2 GET/POST /api/context | [x] |
+| 3 | B3-3 services/receipt.py + POST /api/receipt | [x] |
 | 4 | B4-1 知识库未命中回退（不编造） | [ ] |
 | 4 | B4-2 高风险强提醒 | [ ] |
 | 4 | B4-3 演示数据与字段一致性校验 | [ ] |
@@ -238,9 +243,9 @@ MVP 只做这些接口，**不要**自行新增 `/api/feedback`、`/api/receipts
 
 ### ✅ 阶段 3 验收
 
-- [ ] `/api/context` 能读能改，VIN 默认脱敏
-- [ ] `/api/receipt` 无记录返回空、有记录返回存根
-- [ ] 所有返回字段符合总文档 6.2~6.4 Schema
+- [x] `/api/context` 能读能改，VIN 默认脱敏
+- [x] `/api/receipt` 无记录返回空、有记录返回存根
+- [x] 所有返回字段符合总文档 6.2~6.4 Schema
 
 ---
 

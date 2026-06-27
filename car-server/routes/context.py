@@ -1,35 +1,24 @@
-# routes/context.py —— 【B 角色负责】车辆上下文 /api/context
+# routes/context.py —— 【B 角色】车辆上下文 /api/context
 #
-# 当前为占位实现(stub)。B 角色 TODO：
-#   1. 在 services/context.py 实现 get_context/update_context + mask_vin（VIN 脱敏）
-#   2. GET 返回 car_model/vin(脱敏)/mileage/location/receipts（见总文档 6.2）
-#   3. POST 更新上下文（见总文档 6.3）
-#   4. 默认测试用户 test_user_001 给一份初始数据
-#
-# 注意：只改本文件 + services/ 下你负责的文件，不要改 app.py。
+# GET  /api/context?user_id=  读取上下文（VIN 脱敏），见总文档 6.2
+# POST /api/context           更新上下文，见总文档 6.3
 
 from flask import Blueprint, request, jsonify
+
+from services import context as ctx_service
 
 context_bp = Blueprint("context", __name__)
 
 
 @context_bp.get("/api/context")
 def get_context():
-    # ===== 占位返回（B 接入 services/context.py 后替换）=====
-    return jsonify(
-        {
-            "car_model": "",
-            "vin": "",
-            "mileage": "",
-            "location": "",
-            "receipts": [],
-            "_stub": True,
-        }
-    )
+    user_id = request.args.get("user_id", "")
+    return jsonify(ctx_service.get_context(user_id))
 
 
 @context_bp.post("/api/context")
 def update_context():
-    _ = request.get_json(silent=True) or {}
-    # ===== 占位返回 =====
-    return jsonify({"ok": True, "_stub": True})
+    data = request.get_json(silent=True) or {}
+    user_id = data.get("user_id", "")
+    ctx = ctx_service.update_context(user_id, data)
+    return jsonify({"ok": True, "context": ctx})

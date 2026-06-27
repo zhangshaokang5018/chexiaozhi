@@ -4,3 +4,6 @@ __pycache__/
 .venv/
 venv/
 .env
+
+# RAG 本地向量库（可由 python -m services.rag build 重建，不入库）
+.chroma/

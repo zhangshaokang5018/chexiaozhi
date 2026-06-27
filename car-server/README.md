@@ -20,13 +20,15 @@ car-server/
     receipt.py        # B：/api/receipt（占位，待 B 实现）
     kb.py             # B：/api/kb/<kind>（已读取 knowledge 的基础实现）
   agents/             # A：scheduler/symptom/dtc/part；B：maintain
-  services/           # B：context.py / receipt.py
+  services/           # B：context.py / receipt.py / rag.py（本地 RAG 检索）
   knowledge/          # B 独家维护：kb_dtc / kb_cost / kb_symptom.json（起步数据已就绪）
+  .chroma/            # RAG 本地向量库（自动生成，git 忽略，可重建）
   requirements.txt
   README.md
 ```
 
 > 谁能改哪些文件、如何避免合并冲突，见 `docs/development/工程协作约定.md`。
+> RAG 为完全本地方案（bge-small-zh + Chroma，无需 Key），建索引步骤见 `docs/development/后端服务启动说明.md` 第 3.5 节。
 
 ## 本地启动
 

@@ -64,10 +64,10 @@
 | B-010 | DTC 知识库 | GET `/api/kb/dtc` | count > 0 | pytest |
 | B-011 | 成本知识库 | GET `/api/kb/cost` | count > 0 | pytest |
 | B-012 | 症状知识库 | GET `/api/kb/symptom` | count > 0 | pytest |
-| B-013 | 【可选】RAG 命中 | 已知故障码/症状 | 返回高相关知识块 | pytest |
+| B-013 | RAG 命中（已接入） | 已知故障码/症状 | 返回高相关知识块 | pytest |
 | B-014 | 知识库未命中 | 无关问题 | 返回澄清建议，不编造 | pytest |
 | B-015 | 【可选】LangGraph 流转 | 正常输入 | 节点按调度、检索、生成顺序完成 | pytest |
-| B-016 | 【后续】知识库搜索 | GET `/api/kb/dtc?q=P0300` | total > 0，items 包含 P0300 | pytest |
+| B-016 | 知识库搜索（已接入RAG） | GET `/api/kb/dtc?q=P0300` 或 `?q=发动机发抖` | 返回相关条目（代码或描述均可命中） | pytest |
 | B-017 | 【后续】知识库筛选 | GET `/api/kb/symptom?level=高` | 只返回高风险症状 | pytest |
 | B-018 | 【后续】知识库详情 | GET `/api/kb/dtc/P0300` | 返回 source 和 ask_text | pytest |
 | B-019 | 高风险强提醒 | 机油红灯亮 | risk_level=高，包含停车/救援建议 | pytest |
