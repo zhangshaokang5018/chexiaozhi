@@ -168,3 +168,34 @@ function buildQuery(query?: KbQuery): string {
 export function getKb(kind: KbKind, query?: KbQuery): Promise<KbResp> {
   return request<KbResp>({ url: `/api/kb/${kind}${buildQuery(query)}` })
 }
+
+// 语音转文字：上传录音文件到 /api/asr，返回识别文本
+export interface AsrResp {
+  ok: boolean
+  text: string
+  simulated: boolean // true=降级占位（未配置 Key 或识别失败）
+  model: string
+  error: string | null
+}
+
+export function asr(filePath: string): Promise<AsrResp> {
+  return new Promise<AsrResp>((resolve, reject) => {
+    wx.uploadFile({
+      url: `${BASE_URL}/api/asr`,
+      filePath,
+      name: 'file',
+      success: (res) => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(res.data) as AsrResp)
+          } catch (e) {
+            reject(new Error('ASR 响应解析失败'))
+          }
+        } else {
+          reject(new Error(`HTTP ${res.statusCode}`))
+        }
+      },
+      fail: (err) => reject(err),
+    })
+  })
+}

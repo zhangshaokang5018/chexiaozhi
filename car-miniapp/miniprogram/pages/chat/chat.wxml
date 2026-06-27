@@ -64,10 +64,15 @@
       <text class="chip" bindtap="quickAsk" data-text="拍报价单" data-mode="image" data-image-label="报价单">图片：拍报价单</text>
     </scroll-view>
     <view class="chat-input-row">
+      <button
+        class="voice {{recording ? 'recording' : ''}}"
+        bindtap="toggleRecord"
+        disabled="{{transcribing || loadingAgent}}"
+      >{{recording ? '停止' : (transcribing ? '识别中' : '🎤')}}</button>
       <textarea
         class="input"
         value="{{inputText}}"
-        placeholder="描述你的车辆问题..."
+        placeholder="{{recording ? '正在录音，点停止结束...' : '描述你的车辆问题...'}}"
         auto-height
         bindinput="onInput"
         maxlength="500"

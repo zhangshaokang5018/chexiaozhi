@@ -10,6 +10,7 @@ from flask_cors import CORS
 
 from routes.health import health_bp      # 公共：/api/ping、/
 from routes.chat import chat_bp           # A 负责：/api/chat
+from routes.asr import asr_bp             # 语音转文字：/api/asr
 from routes.context import context_bp     # B 负责：/api/context
 from routes.receipt import receipt_bp     # B 负责：/api/receipt
 from routes.kb import kb_bp               # B 负责：/api/kb/<kind>
@@ -20,7 +21,7 @@ def create_app() -> Flask:
     # 开发阶段允许跨域，方便浏览器 / 工具直接调试接口
     CORS(app)
 
-    for bp in (health_bp, chat_bp, context_bp, receipt_bp, kb_bp):
+    for bp in (health_bp, chat_bp, asr_bp, context_bp, receipt_bp, kb_bp):
         app.register_blueprint(bp)
 
     return app

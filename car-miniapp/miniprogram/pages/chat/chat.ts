@@ -1,6 +1,7 @@
 import {
   chat,
   ping,
+  asr,
   ChatAgentMeta,
   ChatPayload,
   ChatReply,
@@ -229,6 +230,8 @@ Page({
     scrollIntoView: 'msg-welcome',
     inputText: '',
     canSend: false,
+    recording: false,
+    transcribing: false,
     useMock: USE_MOCK,
     context: {
       car_model: '2022款 丰田 卡罗拉 1.2T 豪华版',
@@ -316,6 +319,68 @@ Page({
   uploadImage(event: WechatMiniprogram.TouchEvent) {
     const imageLabel = String(event.currentTarget.dataset.imageLabel || '报价单')
     this.sendQuestion('拍报价单', 'image', imageLabel)
+  },
+
+  // ===== 语音转文字：点一下开始录音，再点一下结束并上传转写 =====
+  ensureRecorder() {
+    const self = this as any
+    if (self._recorder) return self._recorder
+    const rm = wx.getRecorderManager()
+    rm.onStop((res) => {
+      this.setData({ recording: false })
+      if (res && res.tempFilePath) {
+        this.uploadVoice(res.tempFilePath)
+      }
+    })
+    rm.onError(() => {
+      this.setData({ recording: false })
+      wx.showToast({ title: '录音失败，请检查麦克风权限', icon: 'none' })
+    })
+    self._recorder = rm
+    return rm
+  },
+
+  toggleRecord() {
+    if (this.data.transcribing || this.data.loadingAgent) return
+    const rm = this.ensureRecorder()
+    if (this.data.recording) {
+      rm.stop()
+      return
+    }
+    // 开始录音（mp3，16k 单声道，符合 paraformer 识别要求）
+    this.setData({ recording: true })
+    rm.start({
+      format: 'mp3',
+      duration: 60000,
+      sampleRate: 16000,
+      numberOfChannels: 1,
+      encodeBitRate: 48000,
+    })
+  },
+
+  uploadVoice(filePath: string) {
+    this.setData({ transcribing: true })
+    asr(filePath)
+      .then((res) => {
+        const text = (res && res.text) || ''
+        if (!text) {
+          wx.showToast({ title: '没听清，请重试', icon: 'none' })
+          return
+        }
+        // 回填到输入框，用户可编辑后再发送
+        this.setData({ inputText: text, canSend: text.trim().length > 0 })
+        wx.showToast({
+          title: res.simulated ? '已转写(语音示例)' : '已转写',
+          icon: 'none',
+        })
+      })
+      .catch((err) => {
+        console.error('asr failed', err)
+        wx.showToast({ title: '语音转写失败', icon: 'none' })
+      })
+      .finally(() => {
+        this.setData({ transcribing: false })
+      })
   },
 
   sendQuestion(text: string, mode: ChatPayload['mode'], imageLabel: string) {
