@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>车小智小程序原型 - 聊天主界面</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100vh;
+      background:#0f172a;
+      color:#e2e8f0;
+      font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    }
+    .wrap{max-width:1280px;margin:0 auto;padding:20px}
+    .hero{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:16px 20px;margin-bottom:20px;border-radius:12px;
+      background:linear-gradient(135deg,#1e3a8a,#3b82f6);
+      box-shadow:0 4px 16px rgba(59,130,246,.3)
+    }
+    .hero h1{font-size:20px;line-height:1.25}
+    .hero small{display:block;margin-top:4px;font-size:12px;font-weight:400;opacity:.82}
+    .tag{display:inline-block;padding:4px 10px;background:rgba(255,255,255,.15);border-radius:20px;font-size:12px}
+    .stage{display:grid;grid-template-columns:360px 360px 360px;gap:22px;align-items:start;justify-content:center}
+    .screen-title{margin:0 0 10px 6px;color:#cbd5e1;font-size:14px;font-weight:700}
+    .phone{
+      width:360px;height:760px;overflow:hidden;border:8px solid #020617;border-radius:28px;
+      background:#0f172a;box-shadow:0 28px 70px rgba(0,0,0,.5)
+    }
+    .status{height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700}
+    .page{display:flex;flex-direction:column;height:732px}
+    .context-bar{display:flex;align-items:center;padding:8px 12px;background:#1e293b;border-bottom:1px solid #334155;font-size:13px;color:#cbd5e1}
+    .ctx-icon{margin-right:5px}.ctx-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ctx-arrow{margin-left:5px;color:#64748b}
+    .chat{flex:1;padding:10px;background:#0f172a;overflow:hidden}
+    .row{display:flex;margin:9px 0}.row-user{justify-content:flex-end}.row-bot{justify-content:flex-start;flex-direction:column}
+    .bubble{max-width:86%;padding:11px 13px;border-radius:11px;line-height:1.55;font-size:14px;word-break:break-word}
+    .bubble-user{background:#3b82f6;color:#fff;border-bottom-right-radius:3px}
+    .bubble-bot{background:#1e293b;color:#e2e8f0;border-bottom-left-radius:3px;border:1px solid #334155}
+    .bubble-img{background:#0f172a;padding:7px;border-radius:6px;margin-bottom:5px;font-size:13px;border:1px dashed #475569}
+    .agent-chip{display:flex;align-items:center;color:#94a3b8;font-size:12px;margin:3px 0 3px 6px}
+    .agent-dot{margin-right:5px;color:#60a5fa}.agent-dot.animate{animation:blink 1s infinite}.agent-desc{margin-left:4px;color:#64748b}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .steps{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}
+    .step{background:#0f172a;border:1px solid #334155;padding:3px 7px;border-radius:20px;font-size:11px;color:#94a3b8}
+    .route{color:#cbd5e1;font-size:12.5px;margin-bottom:5px}.route-intent{color:#60a5fa;font-weight:600}
+    .reply-title{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:6px}
+    .block{margin:4px 0;font-size:13.5px;color:#cbd5e1}.kv-label{color:#94a3b8}
+    .danger{color:#ef4444;font-weight:600}.good{color:#10b981;font-weight:600}
+    .warn{background:rgba(245,158,11,.12);border-left:3px solid #f59e0b;padding:7px 9px;border-radius:4px;margin:7px 0;color:#fcd34d;font-size:13px}
+    .price{color:#10b981;font-weight:700;margin-top:7px;font-size:14px}.legal{margin-top:8px;font-size:11px;color:#64748b}
+    .typing{text-align:center;color:#64748b;font-size:12px;padding:10px}
+    .chips{white-space:nowrap;padding:8px 10px;background:#1e293b;border-top:1px solid #334155;overflow:hidden}
+    .chip{display:inline-block;padding:7px 11px;background:#334155;border-radius:16px;margin-right:8px;font-size:12px;color:#cbd5e1}
+    .chip-warn{background:#f59e0b;color:#111}
+    .input-bar{display:flex;align-items:flex-end;padding:8px 10px 12px;background:#1e293b;border-top:1px solid #334155;gap:8px}
+    .input{flex:1;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:9px 11px;font-size:14px;color:#64748b;min-height:36px}
+    .send-btn{background:#3b82f6;color:#fff;border-radius:8px;font-size:14px;padding:0 14px;height:36px;line-height:36px}
+    .modal-screen{position:relative;height:732px;background:#0f172a}
+    .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal-box{background:#1e293b;border-radius:10px;padding:15px;width:100%;border:1px solid #334155}
+    .modal-title{font-size:16px;font-weight:700;margin-bottom:10px;text-align:center}
+    .field{display:flex;align-items:center;margin-bottom:7px;background:#0f172a;padding:5px 9px;border-radius:6px;border:1px solid #334155}
+    .field span{width:70px;font-size:13px;color:#94a3b8}.field b{flex:1;color:#e2e8f0;font-size:13px;font-weight:500}
+    .btn-primary{background:#3b82f6;color:#fff;border-radius:6px;margin-top:8px;font-size:14px;text-align:center;padding:10px}
+    .btn-ghost{background:transparent;color:#94a3b8;font-size:13px;margin-top:8px;text-align:center}
+    .receipt-box{background:#fef3c7;color:#78350f;border-color:#d97706}
+    .receipt-box .modal-title{color:#78350f}
+    .receipt{background:#fff7ed;border:2px dashed #d97706;padding:13px;border-radius:7px;font-size:13px;position:relative;line-height:1.5}
+    .rc-line{display:flex;justify-content:space-between;gap:12px;padding:4px 0}.rc-line span:last-child{text-align:right}
+    .rc-divider{border-top:1px dashed #d97706;margin:7px 0}.rc-total{font-weight:700;font-size:15px;border-top:1px solid #d97706;padding-top:7px;margin-top:5px}
+    .rc-stamp{position:absolute;right:10px;bottom:7px;background:#ef4444;color:#fff;padding:4px 8px;border-radius:4px;transform:rotate(-8deg);font-size:11px}.mono{font-family:monospace}
+    .receipt-box .btn-primary{background:#78350f;color:#fef3c7}
+    @media(max-width:1180px){.stage{grid-template-columns:360px}.hero{display:block}.tag{margin-top:10px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>🚗 汽车维修翻译官 · 小程序界面原型<small>按参考代码 chat.wxml / chat.wxss 还原：聊天主界面 + Agent 诊断结果 + 维修记录闭环</small></h1>
+      <span class="tag">Demo v1.0 · 微信小程序形态</span>
+    </header>
+
+    <main class="stage">
+      <section>
+        <div class="screen-title">1. 聊天主界面</div>
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>5G 100%</span></div>
+          <div class="page">
+            <div class="context-bar"><span class="ctx-icon">🚗</span><span class="ctx-text">2022款 丰田 卡罗拉 1.2T 豪华版 · 38,500 km · 北京</span><span class="ctx-arrow">›</span></div>
+            <div class="chat">
+              <div class="row row-bot">
+                <div class="agent-chip"><span class="agent-dot">●</span><span>系统</span><span class="agent-desc">· 汽车维修翻译官</span></div>
+                <div class="bubble bubble-bot">
+                  <div class="reply-title">欢迎使用汽车维修翻译官 👋</div>
+                  <div class="block"><span class="kv-label">我能做：</span>故障码解读 / 症状分析 / 零件识别 / 报价审核</div>
+                  <div class="warn">⚠️ 所有建议仅供参考，请以当地授权维修点为准。</div>
+                </div>
+              </div>
+              <div class="row row-user"><div class="bubble bubble-user">发动机有咕噜咕噜的异响，加速时更明显</div></div>
+              <div class="row row-bot">
+                <div class="agent-chip"><span class="agent-dot animate">●</span><span>调度 Agent</span><span class="agent-desc">· 意图路由中</span></div>
+                <div class="bubble bubble-bot">
+                  <div class="steps"><span class="step">✓ 意图识别</span><span class="step">→ 分发至症状分析 Agent</span><span class="step">○ 知识库检索</span></div>
+                  <div class="route">🎯 识别意图：<span class="route-intent">症状分析</span>（85%）</div>
+                  <div class="reply-title">正在分析…</div>
+                </div>
+              </div>
+              <div class="typing">AI 正在思考…</div>
+            </div>
+            <div class="chips">
+              <span class="chip">🎙 咕噜咕噜响</span><span class="chip">⚠ 故障码</span><span class="chip">📷 拍刹车片</span><span class="chip">📷 拍报价单</span><span class="chip chip-warn">🧾 维修记录</span>
+            </div>
+            <div class="input-bar"><div class="input">描述症状 / 故障码 / 报价…</div><div class="send-btn">发送</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="screen-title">2. Agent 输出结果</div>
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>5G 100%</span></div>
+          <div class="page">
+            <div class="context-bar"><span class="ctx-icon">🚗</span><span class="ctx-text">2022款 丰田 卡罗拉 · 38,500 km · 北京</span><span class="ctx-arrow">›</span></div>
+            <div class="chat">
+              <div class="row row-user"><div class="bubble bubble-user"><div class="bubble-img">📷 识别：维修报价单 · 项目：更换机油机滤 800元</div>帮我看看这份报价单合理吗？</div></div>
+              <div class="row row-bot">
+                <div class="agent-chip"><span class="agent-dot">●</span><span>保养建议 Agent</span><span class="agent-desc">· 报价/避坑指南</span></div>
+                <div class="bubble bubble-bot">
+                  <div class="steps"><span class="step">✓ 意图识别</span><span class="step">✓ 分发至保养建议 Agent</span><span class="step">✓ 知识库检索</span><span class="step">✓ 合成回复</span></div>
+                  <div class="route">🎯 识别意图：<span class="route-intent">保养建议/报价审核</span>（90%）</div>
+                  <div class="reply-title">保养建议 / 报价审核</div>
+                  <div class="block"><span class="kv-label">维修项目：</span>更换机油机滤（紧凑型轿车）</div>
+                  <div class="block"><span class="kv-label">零件参考价：</span>300-500 元</div>
+                  <div class="block"><span class="kv-label">工时参考价：</span>100-200 元</div>
+                  <div class="block"><span class="kv-label">市场总价：</span><span class="good">400-700 元</span></div>
+                  <div class="warn">⚠️ 你报的 800 元超出市场价上限 700 元，建议再找 2-3 家报价对比。</div>
+                  <div class="warn">⚠️ 避坑三件套：① 维修前书面报价 ② 保留旧件 ③ 索取发票与保修单。</div>
+                  <div class="price">💰 400-700 元（零件 300-500 + 工时 100-200）</div>
+                  <div class="legal">所有建议仅供参考，请以当地授权维修点为准。</div>
+                </div>
+              </div>
+            </div>
+            <div class="chips"><span class="chip">⚠ 故障码</span><span class="chip">📷 拍机油报警</span><span class="chip chip-warn">🧾 维修记录</span></div>
+            <div class="input-bar"><div class="input">继续追问或上传照片…</div><div class="send-btn">发送</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="screen-title">3. 弹窗：车辆信息 / 核销单</div>
+        <div class="phone">
+          <div class="status"><span>9:41</span><span>5G 100%</span></div>
+          <div class="modal-screen">
+            <div class="context-bar"><span class="ctx-icon">🚗</span><span class="ctx-text">2022款 丰田 卡罗拉 · 38,500 km · 北京</span><span class="ctx-arrow">›</span></div>
+            <div class="modal-backdrop">
+              <div>
+                <div class="modal-box" style="margin-bottom:14px">
+                  <div class="modal-title">车辆信息</div>
+                  <div class="field"><span>车型</span><b>2022款 丰田 卡罗拉 1.2T 豪华版</b></div>
+                  <div class="field"><span>VIN</span><b>LFMAP22CXXX123456</b></div>
+                  <div class="field"><span>里程</span><b>38,500 km</b></div>
+                  <div class="field"><span>所在地</span><b>北京</b></div>
+                  <div class="btn-primary">保存</div>
+                  <div class="btn-ghost">清空对话与记录</div>
+                </div>
+                <div class="modal-box receipt-box">
+                  <div class="modal-title">🧾 维修记录存根</div>
+                  <div class="receipt">
+                    <div class="rc-line"><span>车智汇授权维修中心</span><span>工单号</span></div>
+                    <div class="rc-line"><span>车型</span><span>2022款 丰田 卡罗拉</span></div>
+                    <div class="rc-line"><span>VIN</span><span class="mono">LFMAP22CXXX123456</span></div>
+                    <div class="rc-line"><span>所在地</span><span>北京</span></div>
+                    <div class="rc-divider"></div>
+                    <div class="rc-line"><span>更换机油机滤</span><span>零件 300-500 · 工时 100-200 · ≈¥550</span></div>
+                    <div class="rc-line rc-total"><span>预估合计</span><span>¥ 550（含税）</span></div>
+                    <div class="rc-stamp">✓ 已核销</div>
+                  </div>
+                  <div class="btn-primary">关闭</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!-- pages/chat/chat.wxml -->
+<!-- 基座阶段：聊天页骨架 + 服务端联通状态展示 -->
+<view class="page">
+  <!-- 顶部车辆上下文条（基座阶段先用占位静态数据） -->
+  <view class="context-bar">
+    <text class="context-text">2022款 丰田 卡罗拉 1.2T 豪华版 · 38,500 km · 北京</text>
+  </view>
+
+  <!-- 服务端连接状态 -->
+  <view class="status {{connected ? 'status--ok' : (loading ? 'status--loading' : 'status--error')}}">
+    <text wx:if="{{loading}}">正在连接服务端…</text>
+    <text wx:elif="{{connected}}">✅ {{statusText}}</text>
+    <text wx:else>❌ {{statusText}}</text>
+  </view>
+
+  <!-- 服务端返回详情 -->
+  <view class="detail" wx:if="{{pingResult}}">
+    <view class="detail-row">name：{{pingResult.name}}</view>
+    <view class="detail-row">version：{{pingResult.version}}</view>
+    <view class="detail-row">ok：{{pingResult.ok}}</view>
+  </view>
+
+  <!-- 消息流占位区（后续阶段填充对话） -->
+  <scroll-view class="messages" scroll-y>
+    <view class="placeholder">聊天主界面骨架已就绪，后续阶段接入 Agent 对话。</view>
+  </scroll-view>
+
+  <!-- 重新检测按钮 -->
+  <button class="retry-btn" bindtap="checkConnection" loading="{{loading}}">重新检测连接</button>
+
+  <!-- 输入栏占位 -->
+  <view class="input-bar">
+    <input class="input" placeholder="描述车况问题（基座阶段未启用）" disabled />
+    <button class="send-btn" disabled>发送</button>
+  </view>
+</view>
