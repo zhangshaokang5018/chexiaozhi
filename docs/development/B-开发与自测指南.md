@@ -64,11 +64,11 @@ MVP 只做这些接口，**不要**自行新增 `/api/feedback`、`/api/receipts
 
 | 阶段 | 任务 | 状态 |
 | --- | --- | --- |
-| 2 | B2-1 故障码知识库 kb_dtc.json | [ ] |
-| 2 | B2-2 症状知识库 kb_symptom.json | [ ] |
-| 2 | B2-3 维修成本知识库 kb_cost.json | [ ] |
-| 2 | B2-4 GET /api/kb/<kind> 接口 | [ ] |
-| 2 | B2-5 报价审核 Agent（maintain） | [ ] |
+| 2 | B2-1 故障码知识库 kb_dtc.json | [x] |
+| 2 | B2-2 症状知识库 kb_symptom.json | [x] |
+| 2 | B2-3 维修成本知识库 kb_cost.json | [x] |
+| 2 | B2-4 GET /api/kb/<kind> 接口 | [x] |
+| 2 | B2-5 报价审核 Agent（maintain） | [x] |
 | 3 | B3-1 services/context.py + VIN 脱敏 | [ ] |
 | 3 | B3-2 GET/POST /api/context | [ ] |
 | 3 | B3-3 services/receipt.py + POST /api/receipt | [ ] |
@@ -167,9 +167,9 @@ MVP 只做这些接口，**不要**自行新增 `/api/feedback`、`/api/receipts
 
 ### ✅ 阶段 2 验收
 
-- [ ] 三个知识库都能通过 `/api/kb/<kind>` 查到，`count>0`
-- [ ] `maintain` 能判断 800 元换机油偏高
-- [ ] 返回 JSON 字段与总文档 6.1 / 第 8 节 Schema 一致
+- [x] 三个知识库都能通过 `/api/kb/<kind>` 查到，`count>0`
+- [x] `maintain` 能判断 800 元换机油偏高
+- [x] 返回 JSON 字段与总文档 6.1 / 第 8 节 Schema 一致
 
 ---
 
