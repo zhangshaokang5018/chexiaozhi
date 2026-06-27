@@ -1,0 +1,62 @@
+{
+  "route": {
+    "agent": "dtc",
+    "intent": "故障码解读",
+    "confidence": 0.92
+  },
+  "agent": "dtc",
+  "agent_meta": {
+    "name": "故障码解读 Agent",
+    "desc": "DTC 代码解析"
+  },
+  "hit": true,
+  "reply": {
+    "title": "P0300 故障码解读",
+    "summary": "P0300 表示随机/多缸缺火，建议先从点火和进气系统低成本排查。",
+    "blocks": [
+      {
+        "type": "danger",
+        "label": "风险等级",
+        "value": "3/5，继续长时间行驶可能损伤三元催化器。",
+        "danger": true
+      },
+      {
+        "type": "kv",
+        "label": "可能原因",
+        "value": "火花塞、点火线圈、喷油嘴、进气漏气或燃油压力异常。"
+      },
+      {
+        "type": "kv",
+        "label": "排查顺序",
+        "value": "先读冻结帧，再查火花塞和点火线圈，最后排查喷油和进气。"
+      },
+      {
+        "type": "warn",
+        "text": "避坑：不要一上来就同意拆发动机，要求维修店先给出读码和逐项检测记录。"
+      }
+    ],
+    "price_text": "参考 800-2500 元",
+    "price_range": [800, 2500]
+  },
+  "steps": [
+    {
+      "name": "意图识别",
+      "status": "done",
+      "detail": "故障码解读（92%）"
+    },
+    {
+      "name": "分发至 故障码解读 Agent",
+      "status": "done"
+    },
+    {
+      "name": "知识库检索",
+      "status": "done"
+    },
+    {
+      "name": "合成回复",
+      "status": "done"
+    }
+  ],
+  "elapsed_ms": 238,
+  "legal_note": "所有建议仅供参考，请以当地授权维修点为准。"
+}

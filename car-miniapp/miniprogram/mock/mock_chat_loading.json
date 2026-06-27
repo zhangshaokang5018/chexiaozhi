@@ -1,0 +1,40 @@
+{
+  "route": {
+    "agent": "scheduler",
+    "intent": "识别中...",
+    "confidence": 0
+  },
+  "agent": "scheduler",
+  "agent_meta": {
+    "name": "调度 Agent",
+    "desc": "意图路由中"
+  },
+  "hit": false,
+  "reply": {
+    "title": "正在分析...",
+    "summary": "AI 正在结合你的描述判断问题类型。",
+    "blocks": [],
+    "price_text": "",
+    "price_range": []
+  },
+  "steps": [
+    {
+      "name": "意图识别",
+      "status": "doing"
+    },
+    {
+      "name": "分发至 Agent",
+      "status": "pending"
+    },
+    {
+      "name": "知识库检索",
+      "status": "pending"
+    },
+    {
+      "name": "合成回复",
+      "status": "pending"
+    }
+  ],
+  "elapsed_ms": 0,
+  "legal_note": "所有建议仅供参考，请以当地授权维修点为准。"
+}

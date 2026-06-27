@@ -1,0 +1,46 @@
+{
+  "route": {
+    "agent": "scheduler",
+    "intent": "请求失败",
+    "confidence": 0
+  },
+  "agent": "scheduler",
+  "agent_meta": {
+    "name": "调度 Agent",
+    "desc": "网络异常兜底"
+  },
+  "hit": false,
+  "reply": {
+    "title": "请求失败",
+    "summary": "暂时无法连接服务端，请稍后重试或切换到 mock 模式演示。",
+    "blocks": [
+      {
+        "type": "warn",
+        "text": "请确认后端服务已启动，且微信开发者工具已勾选不校验合法域名。"
+      }
+    ],
+    "price_text": "",
+    "price_range": []
+  },
+  "steps": [
+    {
+      "name": "意图识别",
+      "status": "done"
+    },
+    {
+      "name": "请求 /api/chat",
+      "status": "todo",
+      "detail": "网络请求失败"
+    },
+    {
+      "name": "知识库检索",
+      "status": "pending"
+    },
+    {
+      "name": "合成回复",
+      "status": "done"
+    }
+  ],
+  "elapsed_ms": 0,
+  "legal_note": "所有建议仅供参考，请以当地授权维修点为准。"
+}

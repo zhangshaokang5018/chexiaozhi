@@ -1,18 +1,95 @@
+import { getKb, KbItem, KbKind, KbResp } from '../../utils/request'
+
+type TabItem = {
+  kind: KbKind
+  label: string
+  count: number
+}
+
+const DEFAULT_TABS: TabItem[] = [
+  { kind: 'dtc', label: '故障码', count: 0 },
+  { kind: 'cost', label: '维修成本', count: 0 },
+  { kind: 'symptom', label: '症状关联', count: 0 },
+]
+
 Page({
   data: {
-    activeTab: 'dtc',
-    items: [
-      { code: 'P0300', stars: '★★★☆☆', desc: '发动机缺火（随机/多缸）', cause: '点火线圈故障 / 火花塞老化 / 喷油嘴堵塞', meta: '零件 800-2000 · 工时 200-500 元', level: 'danger' },
-      { code: 'P0171', stars: '★★☆☆☆', desc: '系统过稀（第1排）', cause: '空气流量计脏污 / 进气歧管漏气 / 燃油泵压力不足', meta: '零件 200-800 · 工时 100-300 元', level: '' },
-      { code: 'P0420', stars: '★★★★☆', desc: '催化器系统效率低于阈值', cause: '三元催化器老化 / 氧传感器故障 / 发动机烧机油', meta: '零件 1500-4000 · 工时 300-800 元', level: 'warn' },
-      { code: 'P0442', stars: '★☆☆☆☆', desc: '蒸发排放系统小泄漏', cause: '油箱盖密封不良 / 碳罐电磁阀故障', meta: '零件 100-500 · 工时 50-200 元', level: '' },
-      { code: 'C0035', stars: '★★☆☆☆', desc: '左前轮速传感器电路故障', cause: 'ABS 传感器脏污或损坏 / 线束磨损', meta: '零件 200-600 · 工时 100-250 元', level: '' },
-      { code: 'B1000', stars: '★★★★★', desc: '电控单元内部故障', cause: 'ECU 软件异常 / 硬件损坏', meta: '零件 2000-8000 · 工时 500-1500 元', level: '' },
-    ],
+    activeTab: 'dtc' as KbKind,
+    tabs: DEFAULT_TABS,
+    items: [] as KbItem[],
+    loading: true,
+    errorText: '',
+    searchText: '',
+    highOnly: false,
+    total: 0,
+    promptConfig:
+      '你是一个专业的汽车维修翻译官。回答时先检索知识库；如果匹配到故障码或症状，请用专业、通俗、警示的口吻说明故障根源、预估费用区间和避坑建议。查不到时不要编造，应建议车主补充信息或寻求线下专业技师协助。',
+  },
+
+  onLoad() {
+    this.loadKb('dtc')
   },
 
   switchTab(event: WechatMiniprogram.TouchEvent) {
-    this.setData({ activeTab: String(event.currentTarget.dataset.tab || 'dtc') })
+    const tab = String(event.currentTarget.dataset.tab || 'dtc') as KbKind
+    this.setData({ activeTab: tab, searchText: '', highOnly: false })
+    this.loadKb(tab)
+  },
+
+  onSearchInput(event: WechatMiniprogram.Input) {
+    this.setData({ searchText: event.detail.value })
+  },
+
+  searchKb() {
+    this.loadKb(this.data.activeTab)
+  },
+
+  clearSearch() {
+    this.setData({ searchText: '', highOnly: false })
+    this.loadKb(this.data.activeTab)
+  },
+
+  toggleHighOnly() {
+    const highOnly = !this.data.highOnly
+    this.setData({ highOnly })
+    this.loadKb(this.data.activeTab)
+  },
+
+  refreshKb() {
+    this.loadKb(this.data.activeTab)
+  },
+
+  loadKb(kind: KbKind) {
+    this.setData({ loading: true, errorText: '' })
+    getKb(kind, {
+      q: this.data.searchText.trim(),
+      level: this.data.highOnly ? 'high' : '',
+      page: 1,
+      page_size: 50,
+    })
+      .then((res: KbResp) => {
+        this.setData({
+          activeTab: kind,
+          tabs: res.tabs && res.tabs.length ? res.tabs : this.data.tabs,
+          items: res.items,
+          total: res.total,
+          loading: false,
+          errorText: '',
+        })
+      })
+      .catch((err) => {
+        console.error('load kb failed', err)
+        this.setData({
+          loading: false,
+          errorText: '知识库加载失败，请确认后端服务已启动',
+        })
+      })
+  },
+
+  askItem(event: WechatMiniprogram.TouchEvent) {
+    const text = String(event.currentTarget.dataset.ask || '')
+    if (!text) return
+    wx.navigateTo({ url: `/pages/chat/chat?ask=${encodeURIComponent(text)}` })
   },
 
   goHome() {
@@ -25,9 +102,5 @@ Page({
 
   goProfile() {
     wx.navigateTo({ url: '/pages/profile/profile' })
-  },
-
-  goDetail() {
-    wx.navigateTo({ url: '/pages/detail/detail' })
   },
 })
