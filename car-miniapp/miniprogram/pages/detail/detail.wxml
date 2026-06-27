@@ -1,0 +1,59 @@
+<view class="screen">
+  <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
+  <view class="nav-bar">
+    <view class="nav-left" bindtap="goBack">‹</view>
+    <view class="nav-title">故障码详情</view>
+    <view class="nav-right">⤴</view>
+  </view>
+
+  <scroll-view class="content detail-content" scroll-y>
+    <view class="detail-top">
+      <text class="detail-code">P0300</text>
+      <text class="detail-name">发动机缺火（随机/多缸）</text>
+      <text class="detail-level">🔧 修复难度 ★★★☆☆</text>
+      <text class="detail-bg">⚠</text>
+    </view>
+
+    <view class="card detail-card">
+      <view class="detail-card-title">🎯 可能原因（按概率排序）</view>
+      <text>1. 火花塞老化或电极磨损（最常见）</text>
+      <text>2. 点火线圈损坏 / 绝缘层开裂</text>
+      <text>3. 喷油嘴堵塞 / 燃油雾化不良</text>
+      <text>4. 进气系统漏气（真空管路 / 节气门垫）</text>
+      <text>5. 燃油品质不佳或含水量超标</text>
+    </view>
+
+    <view class="card detail-card">
+      <view class="detail-card-title">🚀 建议排查步骤</view>
+      <view class="step-item"><text class="num">1</text><text>读取各缸缺火计数，定位是否集中于某一缸</text></view>
+      <view class="step-item"><text class="num">2</text><text>先更换火花塞（4 支同批次），成本最低</text></view>
+      <view class="step-item"><text class="num">3</text><text>若故障仍存，对调点火线圈观察是否跟缸转移</text></view>
+      <view class="step-item"><text class="num">4</text><text>检测燃油压力、清洗喷油嘴、检查进气密封性</text></view>
+    </view>
+
+    <view class="card detail-card">
+      <view class="detail-card-title">💰 费用参考</view>
+      <view class="price-box">
+        <text class="price-label">市场总价区间</text>
+        <text class="price-value">¥ 1,000 <text>~ ¥ 2,500</text></text>
+      </view>
+      <text>· 原厂火花塞（4 支）：约 ¥ 400-800</text>
+      <text>· 原厂点火线圈（1 支）：约 ¥ 500-1000</text>
+      <text>· 工时费：约 ¥ 200-500（2-4h）</text>
+    </view>
+
+    <view class="card detail-card danger-card">
+      <view class="detail-card-title danger-title">⚠️ 避坑提示</view>
+      <text>如维修店建议“直接拆解发动机”，请要求先按上述低成本方案逐项排查；多家门店报价再决策，避免过度维修。</text>
+    </view>
+
+    <view class="primary-btn" bindtap="goChat">💬 立即咨询 Agent</view>
+  </scroll-view>
+
+  <view class="tabbar">
+    <view class="tabbar-item" bindtap="goHome"><text class="tabbar-icon">🏠</text><text>首页</text></view>
+    <view class="tabbar-item" bindtap="goChat"><text class="tabbar-icon">💬</text><text>咨询</text></view>
+    <view class="tabbar-item" bindtap="goKb"><text class="tabbar-icon">📚</text><text>知识库</text></view>
+    <view class="tabbar-item active" bindtap="goProfile"><text class="tabbar-icon">👤</text><text>我的</text></view>
+  </view>
+</view>

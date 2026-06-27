@@ -311,7 +311,7 @@ Page({
   },
 
   showReceipt() {
-    this.setData({ showReceipt: true })
+    wx.navigateTo({ url: '/pages/receipt/receipt' })
   },
 
   closeReceipt() {
@@ -319,4 +319,16 @@ Page({
   },
 
   noop() {},
+
+  goHome() {
+    wx.navigateTo({ url: '/pages/index/index' })
+  },
+
+  goKb() {
+    wx.navigateTo({ url: '/pages/kb/kb' })
+  },
+
+  goProfile() {
+    wx.navigateTo({ url: '/pages/profile/profile' })
+  },
 })

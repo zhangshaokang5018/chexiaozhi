@@ -1,128 +1,86 @@
-<view class="page">
-  <view class="connection {{connected ? 'connection-ok' : 'connection-warn'}}" bindtap="checkConnection">
-    <text wx:if="{{loading}}">服务检测中...</text>
-    <text wx:elif="{{connected}}">服务已连接 · {{pingResult.version}}</text>
-    <text wx:else>{{statusText}}</text>
+<view class="screen chat-screen">
+  <view class="status-bar">
+    <text>9:41</text>
+    <text class="status-icons">📶 📡 🔋</text>
   </view>
 
-  <view class="context-bar" bindtap="openContext">
-    <text class="ctx-icon">车</text>
-    <text class="ctx-text">{{context.car_model}} · {{context.mileage}} · {{context.location}}</text>
-    <text class="ctx-arrow">›</text>
+  <view class="nav-bar">
+    <view class="nav-left" bindtap="goHome">‹</view>
+    <view class="nav-title">汽车维修翻译官</view>
+    <view class="nav-right">⋯</view>
   </view>
 
-  <scroll-view
-    class="chat"
-    scroll-y="{{true}}"
-    scroll-into-view="msg-{{msgTailId}}"
-    scroll-with-animation="{{true}}"
-    enhanced="{{true}}"
-  >
+  <scroll-view class="chat-content" scroll-y enhanced>
+    <view class="connection {{connected ? 'connection-ok' : 'connection-warn'}}" bindtap="checkConnection">
+      <text wx:if="{{loading}}">服务检测中...</text>
+      <text wx:elif="{{connected}}">服务已连接 · {{pingResult.version}}</text>
+      <text wx:else>{{statusText}}</text>
+    </view>
+
     <block wx:for="{{messages}}" wx:key="id">
-      <view wx:if="{{item.role == 'user'}}" class="row row-user" id="msg-{{item.id}}">
-        <view class="bubble bubble-user">
-          <view wx:if="{{item.image}}" class="bubble-img">图片输入：{{item.image}}</view>
+      <view wx:if="{{item.role == 'user'}}" class="msg user" id="msg-{{item.id}}">
+        <view class="bubble">
+          <view wx:if="{{item.image}}" class="bubble-img">识别：{{item.image}}</view>
           <view>{{item.text}}</view>
         </view>
       </view>
 
-      <view wx:else class="row row-bot" id="msg-{{item.id}}">
-        <view class="agent-chip" wx:if="{{item.agentMeta}}">
-          <text class="agent-dot {{item.loading ? 'animate' : ''}}">●</text>
-          <text>{{item.agentMeta.name}}</text>
-          <text class="agent-desc">· {{item.agentMeta.desc}}</text>
+      <view wx:else class="msg bot" id="msg-{{item.id}}">
+        <view class="agent-label" wx:if="{{item.agentMeta}}">
+          <text class="dot">●</text>{{item.agentMeta.name}}<text wx:if="{{item.agentMeta.desc}}"> · {{item.agentMeta.desc}}</text>
         </view>
-
-        <view class="bubble bubble-bot">
+        <view class="bubble">
           <view wx:if="{{item.steps && item.steps.length}}" class="steps">
             <text wx:for="{{item.steps}}" wx:for-item="s" wx:key="name" class="step">
               {{s.status == 'done' ? '✓' : s.status == 'doing' ? '→' : '○'}} {{s.name}}
             </text>
           </view>
-
-          <view wx:if="{{item.route}}" class="route">
-            识别意图：<text class="route-intent">{{item.route.intent}}</text>（{{item.route.confidenceText}}）
-          </view>
-
-          <view class="reply-title" wx:if="{{item.reply.title}}">{{item.reply.title}}</view>
-
+          <view wx:if="{{item.route}}" class="route">识别意图：<text>{{item.route.intent}}</text>（{{item.route.confidenceText}}）</view>
+          <view class="t" wx:if="{{item.reply.title}}">{{item.reply.title}}</view>
           <block wx:if="{{item.reply.blocks}}">
-            <view wx:for="{{item.reply.blocks}}" wx:for-item="b" wx:key="label" class="block">
-              <view wx:if="{{b.type == 'warn'}}" class="warn">警示：{{b.text}}</view>
+            <view wx:for="{{item.reply.blocks}}" wx:for-item="b" wx:key="label" class="kv">
+              <view wx:if="{{b.type == 'warn'}}" class="warn">{{b.text}}</view>
               <view wx:else>
                 <text class="kv-label">{{b.label}}：</text>
-                <text class="{{b.danger ? 'danger' : b.good ? 'good' : ''}}">{{b.value}}</text>
+                <text class="{{b.danger ? 'red' : b.good ? 'green' : ''}}">{{b.value}}</text>
               </view>
             </view>
           </block>
-
-          <view class="price" wx:if="{{item.reply.price_text}}">费用参考：{{item.reply.price_text}}</view>
+          <view class="price" wx:if="{{item.reply.price_text}}">💰 {{item.reply.price_text}}</view>
           <view class="legal" wx:if="{{item.legal_note}}">{{item.legal_note}}</view>
         </view>
       </view>
     </block>
 
     <view wx:if="{{loadingAgent}}" class="typing">AI 正在思考...</view>
-    <view class="chat-bottom"></view>
+    <view class="chat-space"></view>
   </scroll-view>
 
-  <scroll-view class="chips" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
-    <view class="chip" bindtap="quickAsk" data-text="发动机有咕噜咕噜的异响，加速时更明显">咕噜咕噜响</view>
-    <view class="chip" bindtap="quickAsk" data-text="仪表盘亮黄灯，读码显示 P0300">故障码</view>
-    <view class="chip" bindtap="uploadImage" data-type="brake">拍刹车片</view>
-    <view class="chip" bindtap="uploadImage" data-type="oil">拍机油报警</view>
-    <view class="chip" bindtap="uploadImage" data-type="bill">拍报价单</view>
-    <view class="chip" bindtap="quickAsk" data-text="4S店报价 800 元更换机油机滤，合理吗？">报价审核</view>
-    <view class="chip chip-warn" bindtap="showReceipt">维修记录</view>
-  </scroll-view>
-
-  <view class="input-bar">
-    <textarea
-      class="input"
-      value="{{inputText}}"
-      placeholder="描述症状 / 故障码 / 报价..."
-      auto-height
-      bindinput="onInput"
-      bindconfirm="send"
-      confirm-type="send"
-      maxlength="500"
-    />
-    <button class="send-btn" bindtap="send" disabled="{{!inputText || loadingAgent}}">发送</button>
-  </view>
-</view>
-
-<view wx:if="{{showContext}}" class="modal" catchtap="closeContext">
-  <view class="modal-box" catchtap="noop">
-    <view class="modal-title">车辆信息</view>
-    <view class="field"><text>车型</text><input value="{{context.car_model}}" bindinput="ctxInput" data-k="car_model" /></view>
-    <view class="field"><text>VIN</text><input value="{{context.vin}}" bindinput="ctxInput" data-k="vin" /></view>
-    <view class="field"><text>里程</text><input value="{{context.mileage}}" bindinput="ctxInput" data-k="mileage" /></view>
-    <view class="field"><text>所在地</text><input value="{{context.location}}" bindinput="ctxInput" data-k="location" /></view>
-    <button class="btn-primary" bindtap="saveContext">保存</button>
-    <button class="btn-ghost" bindtap="clearHistory">清空对话与记录</button>
-  </view>
-</view>
-
-<view wx:if="{{showReceipt}}" class="modal" catchtap="closeReceipt">
-  <view class="modal-box receipt-box" catchtap="noop">
-    <view class="modal-title">维修记录存根</view>
-    <view class="receipt">
-      <view class="rc-line"><text>{{receipt.shop}}</text><text>工单号</text></view>
-      <view class="rc-line"><text>车型</text><text>{{receipt.car_model}}</text></view>
-      <view class="rc-line"><text>VIN</text><text class="mono">{{receipt.vin}}</text></view>
-      <view class="rc-line"><text>所在地</text><text>{{receipt.location}}</text></view>
-      <view class="rc-line"><text>时间</text><text>{{receipt.created_at}}</text></view>
-      <view class="rc-divider"></view>
-      <block wx:if="{{receipt.items.length}}">
-        <view wx:for="{{receipt.items}}" wx:key="item" class="rc-line">
-          <text>{{item.item}}</text>
-          <text>零件 {{item.part_range}} · 工时 {{item.labor_range}} · 约 {{item.avg}} 元</text>
-        </view>
-        <view class="rc-line rc-total"><text>预估合计</text><text>{{receipt.total}} 元</text></view>
-      </block>
-      <view wx:else class="rc-empty">尚无诊断记录，请先咨询。</view>
-      <view class="rc-stamp">已核销</view>
+  <view class="chat-input-bar">
+    <scroll-view class="chips" scroll-x enhanced show-scrollbar="{{false}}">
+      <text class="chip" bindtap="quickAsk" data-text="发动机有咕噜咕噜的异响，加速时更明显">🎙 口语描述</text>
+      <text class="chip" bindtap="quickAsk" data-text="仪表盘亮黄灯，读码显示 P0300">⚠ 故障码</text>
+      <text class="chip" bindtap="uploadImage" data-type="brake">📷 拍刹车片</text>
+      <text class="chip" bindtap="uploadImage" data-type="bill">📷 拍报价单</text>
+      <text class="chip" bindtap="quickAsk" data-text="4S店报价 1200 元，合理吗？">💰 报价</text>
+    </scroll-view>
+    <view class="chat-input-row">
+      <textarea
+        class="input"
+        value="{{inputText}}"
+        placeholder="描述你的车辆问题..."
+        auto-height
+        bindinput="onInput"
+        maxlength="500"
+      />
+      <button class="send" bindtap="send" disabled="{{!inputText || loadingAgent}}">发送</button>
     </view>
-    <button class="btn-primary" bindtap="closeReceipt">关闭</button>
+  </view>
+
+  <view class="tabbar">
+    <view class="tabbar-item" bindtap="goHome"><text class="tabbar-icon">🏠</text><text>首页</text></view>
+    <view class="tabbar-item active"><text class="tabbar-icon">💬</text><text>咨询</text></view>
+    <view class="tabbar-item" bindtap="goKb"><text class="tabbar-icon">📚</text><text>知识库</text></view>
+    <view class="tabbar-item" bindtap="goProfile"><text class="tabbar-icon">👤</text><text>我的</text></view>
   </view>
 </view>

@@ -1,7 +1,11 @@
 {
   "pages": [
-    "pages/chat/chat",
     "pages/index/index",
+    "pages/chat/chat",
+    "pages/kb/kb",
+    "pages/profile/profile",
+    "pages/receipt/receipt",
+    "pages/detail/detail",
     "pages/logs/logs"
   ],
   "window": {

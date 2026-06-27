@@ -1,0 +1,49 @@
+<view class="screen">
+  <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
+  <view class="nav-bar">
+    <view class="nav-left"></view>
+    <view class="nav-title">我的</view>
+    <view class="nav-right">⚙️</view>
+  </view>
+
+  <scroll-view class="content profile-content" scroll-y>
+    <view class="profile-head">
+      <view class="avatar">🧑‍🔧</view>
+      <view>
+        <text class="name">车主 · 张先生</text>
+        <text class="sub">ID: u_8f3a1c · 已认证</text>
+      </view>
+    </view>
+
+    <view class="stat-row">
+      <view class="stat"><text class="n">12</text><text class="l">咨询次数</text></view>
+      <view class="stat"><text class="n">8</text><text class="l">核销单</text></view>
+      <view class="stat"><text class="n">¥4.8k</text><text class="l">节省金额</text></view>
+    </view>
+
+    <view class="car-info">
+      <view class="car-title">🚘 当前车辆</view>
+      <view class="info-row"><text>车型</text><text>丰田 卡罗拉 1.2T</text></view>
+      <view class="info-row"><text>年款</text><text>2022 豪华版</text></view>
+      <view class="info-row"><text>里程</text><text>38,500 km</text></view>
+      <view class="info-row"><text>VIN</text><text>LFMAP22CXXX123456</text></view>
+      <view class="info-row"><text>所在地</text><text>北京</text></view>
+    </view>
+
+    <view class="menu-list">
+      <view class="menu-item" bindtap="goReceipt"><text class="emoji">🧾</text><text class="label">我的维修记录</text><text class="arrow">›</text></view>
+      <view class="menu-item"><text class="emoji">🚗</text><text class="label">车辆管理（切换车辆）</text><text class="arrow">›</text></view>
+      <view class="menu-item"><text class="emoji">⭐</text><text class="label">收藏的诊断结论</text><text class="arrow">›</text></view>
+      <view class="menu-item"><text class="emoji">🛡️</text><text class="label">附近授权维修点</text><text class="arrow">›</text></view>
+      <view class="menu-item"><text class="emoji">📞</text><text class="label">联系客服</text><text class="arrow">›</text></view>
+      <view class="menu-item"><text class="emoji">⚙️</text><text class="label">设置</text><text class="arrow">›</text></view>
+    </view>
+  </scroll-view>
+
+  <view class="tabbar">
+    <view class="tabbar-item" bindtap="goHome"><text class="tabbar-icon">🏠</text><text>首页</text></view>
+    <view class="tabbar-item" bindtap="goChat"><text class="tabbar-icon">💬</text><text>咨询</text></view>
+    <view class="tabbar-item" bindtap="goKb"><text class="tabbar-icon">📚</text><text>知识库</text></view>
+    <view class="tabbar-item active"><text class="tabbar-icon">👤</text><text>我的</text></view>
+  </view>
+</view>

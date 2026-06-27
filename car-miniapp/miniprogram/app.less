@@ -1,10 +1,147 @@
-/**app.wxss**/
-.container {
-  height: 100%;
+page {
+  min-height: 100vh;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.screen {
+  min-height: 100vh;
+  padding-bottom: 148rpx;
+  background: #0f172a;
+  box-sizing: border-box;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx 32rpx 18rpx;
+  color: #e2e8f0;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.status-icons {
+  color: #cbd5e1;
+  font-size: 22rpx;
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  min-height: 88rpx;
+  padding: 0 28rpx;
+  background: #1e293b;
+  border-bottom: 1rpx solid #334155;
+  box-sizing: border-box;
+}
+
+.nav-left,
+.nav-right {
+  width: 72rpx;
+  color: #94a3b8;
+  font-size: 34rpx;
+}
+
+.nav-right {
+  text-align: right;
+}
+
+.nav-title {
+  flex: 1;
+  text-align: center;
+  color: #f1f5f9;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.content {
+  padding: 28rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  margin-bottom: 22rpx;
+  padding: 24rpx;
+  border: 1rpx solid #334155;
+  border-radius: 24rpx;
+  background: #1e293b;
+  box-sizing: border-box;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 16rpx;
+  color: #f1f5f9;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.tag {
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 500;
+}
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  height: 128rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(30, 41, 59, .96);
+  border-top: 1rpx solid #334155;
+  backdrop-filter: blur(20rpx);
+}
+
+.tabbar-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 200rpx 0;
+  justify-content: center;
+  gap: 6rpx;
+  color: #64748b;
+  font-size: 22rpx;
+}
+
+.tabbar-icon {
+  font-size: 38rpx;
+}
+
+.tabbar-item.active {
+  color: #60a5fa;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: #f59e0b;
+  color: #111827;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
   box-sizing: border-box;
-} 
+}
+
+.ghost-btn {
+  width: 100%;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: #334155;
+  color: #e2e8f0;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  box-sizing: border-box;
+}

@@ -1,0 +1,30 @@
+<view class="screen">
+  <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
+  <view class="nav-bar">
+    <view class="nav-left"></view>
+    <view class="nav-title">维修知识库</view>
+    <view class="nav-right">🔍</view>
+  </view>
+
+  <scroll-view class="content kb-content" scroll-y>
+    <view class="kb-tabs">
+      <view class="kb-tab {{activeTab == 'dtc' ? 'active' : ''}}" data-tab="dtc" bindtap="switchTab">故障码</view>
+      <view class="kb-tab {{activeTab == 'cost' ? 'active' : ''}}" data-tab="cost" bindtap="switchTab">成本</view>
+      <view class="kb-tab {{activeTab == 'symptom' ? 'active' : ''}}" data-tab="symptom" bindtap="switchTab">症状</view>
+    </view>
+
+    <view wx:for="{{items}}" wx:key="code" class="kb-item {{item.level}}" bindtap="goDetail">
+      <view class="kb-head"><text class="code">{{item.code}}</text><text class="stars">{{item.stars}}</text></view>
+      <text class="desc">{{item.desc}}</text>
+      <text class="cause">{{item.cause}}</text>
+      <view class="meta">💰 {{item.meta}}</view>
+    </view>
+  </scroll-view>
+
+  <view class="tabbar">
+    <view class="tabbar-item" bindtap="goHome"><text class="tabbar-icon">🏠</text><text>首页</text></view>
+    <view class="tabbar-item" bindtap="goChat"><text class="tabbar-icon">💬</text><text>咨询</text></view>
+    <view class="tabbar-item active"><text class="tabbar-icon">📚</text><text>知识库</text></view>
+    <view class="tabbar-item" bindtap="goProfile"><text class="tabbar-icon">👤</text><text>我的</text></view>
+  </view>
+</view>

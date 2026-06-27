@@ -1,28 +1,96 @@
-<!--index.wxml-->
-<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
-    <view class="userinfo">
-      <block wx:if="{{canIUseNicknameComp && !hasUserInfo}}">
-        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-          <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
-        </button>
-        <view class="nickname-wrapper">
-          <text class="nickname-label">昵称</text>
-          <input type="nickname" class="nickname-input" placeholder="请输入昵称" bind:change="onInputChange" />
-        </view>
-      </block>
-      <block wx:elif="{{!hasUserInfo}}">
-        <button wx:if="{{canIUseGetUserProfile}}" bindtap="getUserProfile"> 获取头像昵称 </button>
-        <view wx:else> 请使用2.10.4及以上版本基础库 </view>
-      </block>
-      <block wx:else>
-        <image bindtap="bindViewTap" class="userinfo-avatar" src="{{userInfo.avatarUrl}}" mode="cover"></image>
-        <text class="userinfo-nickname">{{userInfo.nickName}}</text>
-      </block>
-    </view>
-    <view class="usermotto">
-      <text class="user-motto">{{motto}}</text>
-    </view>
+<view class="screen">
+  <view class="status-bar">
+    <text>9:41</text>
+    <text class="status-icons">📶 📡 🔋</text>
   </view>
-</scroll-view>
+
+  <view class="nav-bar">
+    <view class="nav-left"></view>
+    <view class="nav-title">汽车维修翻译官</view>
+    <view class="nav-right">⋯</view>
+  </view>
+
+  <scroll-view class="content home-content" scroll-y>
+    <view class="banner">
+      <view class="banner-copy">
+        <text class="banner-title">遇到故障不用慌</text>
+        <text class="banner-desc">AI Agent 帮你解读症状、故障码和报价</text>
+      </view>
+      <text class="banner-car">🚗</text>
+    </view>
+
+    <view class="grid-4">
+      <view class="mini-card" bindtap="goChat">
+        <text class="emoji">🎙️</text>
+        <text class="label">描述症状</text>
+      </view>
+      <view class="mini-card" bindtap="goDetail">
+        <text class="emoji">⚠️</text>
+        <text class="label">故障码</text>
+      </view>
+      <view class="mini-card" bindtap="goChat">
+        <text class="emoji">📷</text>
+        <text class="label">拍照识别</text>
+      </view>
+      <view class="mini-card" bindtap="goChat">
+        <text class="emoji">💰</text>
+        <text class="label">报价审核</text>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">🚘 我的车辆 <text class="tag">丰田 卡罗拉</text></view>
+      <view class="vehicle-meta">
+        <text>里程 <text class="strong">38,500 km</text> · 所在地 <text class="strong">北京</text></text>
+        <text>VIN <text class="mono">LFMAP...3456</text></text>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">⚡ 快速开始</view>
+      <view class="quick-item" bindtap="goChat">
+        <text class="quick-emoji">🔧</text>
+        <view class="quick-info">
+          <text class="quick-title">发动机咕噜咕噜响</text>
+          <text class="quick-desc">常见故障 · 点击立即咨询</text>
+        </view>
+        <text class="quick-arrow">›</text>
+      </view>
+      <view class="quick-item" bindtap="goChat">
+        <text class="quick-emoji">🛞</text>
+        <view class="quick-info">
+          <text class="quick-title">刹车片磨损报警</text>
+          <text class="quick-desc">高紧急度 · 建议尽快处理</text>
+        </view>
+        <text class="quick-arrow">›</text>
+      </view>
+      <view class="quick-item" bindtap="goChat">
+        <text class="quick-emoji">💸</text>
+        <view class="quick-info">
+          <text class="quick-title">800元换机油机滤？</text>
+          <text class="quick-desc">报价是否合理 · 一键审核</text>
+        </view>
+        <text class="quick-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">🔥 热门故障</view>
+      <view class="hot-list">
+        <text class="hot-tag"><text class="rank">1</text>P0300 缺火</text>
+        <text class="hot-tag"><text class="rank">2</text>怠速抖动</text>
+        <text class="hot-tag"><text class="rank">3</text>刹车异响</text>
+        <text class="hot-tag"><text class="rank">4</text>机油报警</text>
+        <text class="hot-tag"><text class="rank">5</text>换挡顿挫</text>
+        <text class="hot-tag"><text class="rank">6</text>水温过高</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="tabbar">
+    <view class="tabbar-item active"><text class="tabbar-icon">🏠</text><text>首页</text></view>
+    <view class="tabbar-item" bindtap="goChat"><text class="tabbar-icon">💬</text><text>咨询</text></view>
+    <view class="tabbar-item" bindtap="goKb"><text class="tabbar-icon">📚</text><text>知识库</text></view>
+    <view class="tabbar-item" bindtap="goProfile"><text class="tabbar-icon">👤</text><text>我的</text></view>
+  </view>
+</view>

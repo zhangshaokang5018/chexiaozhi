@@ -1,4 +1,10 @@
 Page({
+  goBack() {
+    wx.navigateBack()
+  },
+  goHome() {
+    wx.navigateTo({ url: '/pages/index/index' })
+  },
   goChat() {
     wx.navigateTo({ url: '/pages/chat/chat' })
   },
@@ -7,8 +13,5 @@ Page({
   },
   goProfile() {
     wx.navigateTo({ url: '/pages/profile/profile' })
-  },
-  goDetail() {
-    wx.navigateTo({ url: '/pages/detail/detail' })
   },
 })
