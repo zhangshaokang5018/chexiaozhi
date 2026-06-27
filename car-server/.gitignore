@@ -7,3 +7,6 @@ venv/
 
 # RAG 本地向量库（可由 python -m services.rag build 重建，不入库）
 .chroma/
+
+# 用户体系本地数据（PII，不入库；格式由 B 选择）。需样例时单独提供 data/users.example.json
+data/

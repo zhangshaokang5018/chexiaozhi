@@ -2,16 +2,16 @@
 
 基于多 Agent 协同的汽车售后商机挖掘与车况决策助手——小程序 MVP。
 
-开发文档：`docs/development/车小智小程序开发文档.md`
+开发文档（统一入口）：[`docs/development/README.md`](docs/development/README.md)
 
-## 当前进度：阶段 0 · 最小基座 ✅
+## 当前进度：能跑通单点，主链路待打通；并行分工 A 主业务 / B 用户体系
 
-已完成最小联通基座：
+- ✅ 基座联通：Flask 可启动、`GET /api/ping`、小程序聊天页 + `utils/request.ts`。
+- ✅ 知识库链路端到端打通（`/api/kb/*` + RAG + 降级）。
+- ⚠️ 对话主入口 `/api/chat` 仅做意图分类、返回占位，**尚未调用智能体**（核心断点）。
+- 🆕 新增用户体系（登录 / 资料 / 隐私 / 我的页数据）作为独立开发线。
 
-- ✅ 服务端 Flask 可启动（`car-server`）
-- ✅ `GET /api/ping` 返回固定 JSON
-- ✅ 小程序聊天页骨架（`pages/chat`）+ 请求封装（`utils/request.ts`）
-- ✅ 小程序请求 `/api/ping` 并展示「服务已连接」
+分工与计划详见开发文档：A 负责现有主业务闭环，B 负责新增用户体系，二者按文件边界并行开发。
 
 ## 仓库结构
 
@@ -56,4 +56,4 @@ python -m venv .venv
 - 小程序页面显示「服务已连接」。
 - 服务端日志能看到 `GET /api/ping` 请求。
 
-基座跑通后，再按文档进入聊天 / Agent / 知识库 / 维修记录等功能阶段。
+基座跑通后，再按 [`docs/development/05-任务清单与开发计划.md`](docs/development/05-任务清单与开发计划.md) 进入主业务接通（A）与用户体系（B）两条开发线。
