@@ -39,7 +39,7 @@ car-server/
 > **RAG 已接入（完全本地）**：症状库/成本库/**故障码库**用本地模型 `BAAI/bge-small-zh-v1.5` + 本地 Chroma 做语义检索（`services/rag.py`），**无需任何 API Key、离线运行**。
 > - `maintain`（成本）：关键词优先 + RAG 兜底。
 > - **故障码库**：每条绑定 `code`/`desc`/`plain`(小白解释) 三字段，`/api/kb/dtc?q=` 支持「精确码优先 → RAG 语义 → 关键词兜底」，用代码或大白话描述都能搜到整条。
-> - 配置/建索引见 `后端服务启动说明.md` 3.5 节（首次建索引会下载约 100MB 模型，仅此一次联网）。LangGraph 仍未引入（agent 为普通函数）。
+> - 配置/建索引见 `后端服务启动说明.md` 3.5 节（首次建索引会下载约 100MB 模型，仅此一次联网）。**已引入 LangGraph**：`maintain` 智能体用 `StateGraph` 编排（extract→retrieve→assess/clarify），RAG 检索封装为 `services/rag.py` 的 LangGraph 检索节点（`make_retrieve_node` / `build_retrieval_graph`），智能体与 RAG 统一在图上管理；langgraph 不可用时自动退回顺序执行。
 
 ### 0.2 你和 A 的接口契约（必须遵守）
 

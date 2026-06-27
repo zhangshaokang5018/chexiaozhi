@@ -20,6 +20,7 @@
 import json
 import os
 import sys
+from typing import TypedDict
 
 from routes.kb import load_kb
 
@@ -136,6 +137,64 @@ def search(kind: str, query: str, top_k: int = 3, max_distance: float = None):
     except Exception as e:
         print(f"[rag] search 退回关键词匹配，原因: {e}")
         return None
+
+
+# ===================== LangGraph 检索节点（让 RAG 也跑在图里，统一管理） =====================
+#
+# 设计：把 search() 包装成一个可复用的 LangGraph 节点工厂。任何智能体（maintain 等）
+# 都能把检索作为图里的一个“显式节点”插入，而不是埋在某个函数内部，方便观测/复用/编排。
+#
+# 约定：节点从 state[query_key] 取查询文本，把命中结果写入 state[out_key]
+#       （格式同 search()：[{item, distance}]；不可用/未命中写入 []）。
+
+# 检索状态：单独跑 RAG 子图时使用；嵌入其他图时按 TypedDict total=False 兼容
+class RetrievalState(TypedDict, total=False):
+    text: str          # 输入：查询文本
+    rag_hits: list     # 输出：命中列表 [{item, distance}]
+
+
+def make_retrieve_node(
+    kind: str,
+    *,
+    top_k: int = 5,
+    max_distance: float = None,
+    query_key: str = "text",
+    out_key: str = "rag_hits",
+):
+    """生成一个 LangGraph 检索节点：读 state[query_key] → 写 state[out_key]=命中列表。
+
+    用法（在某个智能体的图里）：
+        g.add_node("retrieve", make_retrieve_node("cost", top_k=1, max_distance=0.55))
+    """
+    def _retrieve_node(state: dict) -> dict:
+        query = state.get(query_key, "") or ""
+        hits = search(kind, query, top_k=top_k, max_distance=max_distance) or []
+        return {out_key: hits}
+
+    return _retrieve_node
+
+
+_retrieval_graphs = {}
+
+
+def build_retrieval_graph(kind: str, *, top_k: int = 5, max_distance: float = None):
+    """把单个知识库的检索编译成一张独立的 LangGraph 图（START→retrieve→END），按 kind 缓存。
+
+    让 RAG 检索本身就是“一张图”，可单独 invoke，便于统一管理与调试：
+        graph = build_retrieval_graph("cost", top_k=1, max_distance=0.55)
+        hits = graph.invoke({"text": "换机油多少钱"})["rag_hits"]
+    """
+    cache_key = (kind, top_k, max_distance)
+    if cache_key not in _retrieval_graphs:
+        from langgraph.graph import StateGraph, START, END
+
+        g = StateGraph(RetrievalState)
+        g.add_node("retrieve", make_retrieve_node(
+            kind, top_k=top_k, max_distance=max_distance))
+        g.add_edge(START, "retrieve")
+        g.add_edge("retrieve", END)
+        _retrieval_graphs[cache_key] = g.compile()
+    return _retrieval_graphs[cache_key]
 
 
 if __name__ == "__main__":

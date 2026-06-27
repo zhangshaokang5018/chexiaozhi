@@ -55,23 +55,6 @@ def _extract_price(text: str):
     return None
 
 
-def _match_item(text: str, cost_kb: list):
-    """混合匹配：关键词精确匹配优先（短中文术语精度高），未命中再用 RAG 语义兜底。
-
-    说明：当前 KB 条目少且术语高度重叠（机滤/空调滤芯都含“滤”），RAG-first 易误配；
-    待接入 qwen3-rerank 重排后可切换为 RAG-first。RAG 在此用于覆盖关键词覆盖不到的口语化表达。
-    """
-    # 1) 关键词 / 2-gram 精确匹配优先
-    item = _match_item_by_keyword(text, cost_kb)
-    if item:
-        return item
-    # 2) 关键词未命中 → RAG 语义检索兜底
-    hits = rag.search("cost", text, top_k=1, max_distance=_COST_RAG_MAX_DISTANCE)
-    if hits:
-        return hits[0]["item"]
-    return None
-
-
 def _match_item_by_keyword(text: str, cost_kb: list):
     """关键词匹配维修项目，取匹配最强(最长命中)的一条；匹配不到返回 None。"""
     best, best_score = None, 0
@@ -110,7 +93,8 @@ class MaintainState(TypedDict, total=False):
     text: str                 # 输入：用户文本
     context: dict             # 输入：车辆上下文
     quoted: Optional[float]   # extract 产出：提取到的报价
-    item: Optional[dict]      # extract 产出：匹配到的维修项目（None=未命中）
+    item: Optional[dict]      # extract/retrieve 产出：匹配到的维修项目（None=未命中）
+    rag_hits: list            # retrieve 产出：RAG 命中列表 [{item, distance}]
     steps: list               # 思考步骤（贯穿全图）
     result: dict              # 终态：最终对外返回的完整 dict
 
@@ -118,20 +102,53 @@ class MaintainState(TypedDict, total=False):
 # ===================== 节点实现（每个节点接收 state，返回部分更新） =====================
 
 def extract_node(state: MaintainState) -> dict:
-    """提取报价金额 + 匹配维修项目，初始化思考步骤。"""
+    """提取报价金额 + 关键词匹配维修项目，初始化思考步骤。
+
+    只做“关键词精确匹配”；关键词未命中时由独立的 retrieve 节点走 RAG 语义检索，
+    使检索成为图里一个显式可观测的步骤。
+    """
     text = state.get("text", "") or ""
     cost_kb = load_kb("cost") or []
-    item = _match_item(text, cost_kb)
+    item = _match_item_by_keyword(text, cost_kb)
     quoted = _extract_price(text)
     steps = _init_steps()
-    if item is None:
-        steps[2]["status"] = "miss"  # 知识库检索未命中
+    if item is not None:
+        steps[2]["detail"] = "关键词命中"
     return {"quoted": quoted, "item": item, "steps": steps}
 
 
+def retrieve_node(state: MaintainState) -> dict:
+    """RAG 语义检索节点（关键词未命中时调用）。
+
+    复用 services/rag.py 的 LangGraph 检索节点工厂，对成本库做语义召回，写入 rag_hits。
+    纯本地、无需 API Key。
+    """
+    text = state.get("text", "") or ""
+    hits = rag.search("cost", text, top_k=1, max_distance=_COST_RAG_MAX_DISTANCE) or []
+    steps = state.get("steps", _init_steps())
+    if hits:
+        steps[2]["detail"] = "RAG 语义命中"
+    else:
+        steps[2]["status"] = "miss"
+    return {"rag_hits": hits, "steps": steps}
+
+
+def _current_item(state: MaintainState):
+    """图中“当前命中的维修项目”：优先关键词命中的 item，否则取 RAG 第一条。"""
+    if state.get("item"):
+        return state["item"]
+    hits = state.get("rag_hits") or []
+    return hits[0]["item"] if hits else None
+
+
 def _route_after_extract(state: MaintainState) -> str:
-    """条件路由：未匹配到项目走 clarify，否则走 assess。"""
-    return "clarify" if state.get("item") is None else "assess"
+    """关键词命中 → 直接 assess；未命中 → 走 retrieve 节点做语义检索。"""
+    return "assess" if state.get("item") is not None else "retrieve"
+
+
+def _route_after_retrieve(state: MaintainState) -> str:
+    """RAG 命中 → assess；仍未命中 → clarify（不编造）。"""
+    return "assess" if _current_item(state) is not None else "clarify"
 
 
 def clarify_node(state: MaintainState) -> dict:
@@ -159,7 +176,7 @@ def clarify_node(state: MaintainState) -> dict:
 
 def assess_node(state: MaintainState) -> dict:
     """命中：计算合理区间、判断报价、组装避坑三件套（hit=true）。"""
-    item = state["item"]
+    item = _current_item(state)
     quoted = state.get("quoted")
     context = state.get("context") or {}
     location = context.get("location", "")
@@ -239,18 +256,30 @@ _graph = None
 
 
 def _build_graph():
-    """构建并编译 maintain 的 StateGraph。langgraph 不可用时抛异常，由 handle 退回。"""
+    """构建并编译 maintain 的 StateGraph。langgraph 不可用时抛异常，由 handle 退回。
+
+    流程：
+        START → extract → [关键词命中? assess : retrieve]
+                retrieve → [RAG命中? assess : clarify]
+                assess / clarify → END
+    """
     from langgraph.graph import StateGraph, START, END
 
     g = StateGraph(MaintainState)
     g.add_node("extract", extract_node)
+    g.add_node("retrieve", retrieve_node)
     g.add_node("clarify", clarify_node)
     g.add_node("assess", assess_node)
     g.add_edge(START, "extract")
     g.add_conditional_edges(
         "extract",
         _route_after_extract,
-        {"clarify": "clarify", "assess": "assess"},
+        {"assess": "assess", "retrieve": "retrieve"},
+    )
+    g.add_conditional_edges(
+        "retrieve",
+        _route_after_retrieve,
+        {"assess": "assess", "clarify": "clarify"},
     )
     g.add_edge("clarify", END)
     g.add_edge("assess", END)
@@ -265,13 +294,18 @@ def _get_graph():
 
 
 def _handle_fallback(text: str, context=None) -> dict:
-    """langgraph 不可用时的顺序退回：手工串起 extract → 路由 → clarify/assess。
+    """langgraph 不可用时的顺序退回：手工串起 extract → retrieve → clarify/assess。
 
     逻辑与图完全一致，保证“永远能跑”。
     """
     state: MaintainState = {"text": text, "context": context or {}}
     state.update(extract_node(state))
-    if _route_after_extract(state) == "clarify":
+    if _route_after_extract(state) == "retrieve":
+        state.update(retrieve_node(state))
+        nxt = _route_after_retrieve(state)
+    else:
+        nxt = "assess"
+    if nxt == "clarify":
         state.update(clarify_node(state))
     else:
         state.update(assess_node(state))
