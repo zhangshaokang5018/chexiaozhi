@@ -1,42 +1,32 @@
 # app.py
-# 车小智服务端 - 最小基座
-# 阶段 0：只提供 /api/ping，验证小程序与服务端最小联通。
-# 后续阶段再扩展 /api/chat、/api/context、/api/receipt、/api/kb/<kind> 等接口。
+# 车小智服务端入口。
+#
+# 【重要 · 协作约定】本文件已"冻结"：所有路由都通过蓝图(Blueprint)注册，A/B 双方
+# 各自的路由文件已提前建好并在此注册。开发功能时请只改 routes/ 下属于你的文件，
+# 不要再改本文件，从而避免合并冲突。详见 docs/development/工程协作约定.md。
 
-from flask import Flask, jsonify
+from flask import Flask
 from flask_cors import CORS
 
-APP_NAME = "chexiaozhi-server"
-APP_VERSION = "0.1.0"
-
-app = Flask(__name__)
-# 开发阶段允许跨域，方便浏览器 / 工具直接调试接口
-CORS(app)
-
-
-@app.get("/api/ping")
-def ping():
-    """验证小程序与服务端联通。返回固定 JSON。"""
-    return jsonify(
-        {
-            "ok": True,
-            "name": APP_NAME,
-            "version": APP_VERSION,
-        }
-    )
+from routes.health import health_bp      # 公共：/api/ping、/
+from routes.chat import chat_bp           # A 负责：/api/chat
+from routes.context import context_bp     # B 负责：/api/context
+from routes.receipt import receipt_bp     # B 负责：/api/receipt
+from routes.kb import kb_bp               # B 负责：/api/kb/<kind>
 
 
-@app.get("/")
-def index():
-    """根路径，便于浏览器直接确认服务已启动。"""
-    return jsonify(
-        {
-            "ok": True,
-            "name": APP_NAME,
-            "version": APP_VERSION,
-            "endpoints": ["/api/ping"],
-        }
-    )
+def create_app() -> Flask:
+    app = Flask(__name__)
+    # 开发阶段允许跨域，方便浏览器 / 工具直接调试接口
+    CORS(app)
+
+    for bp in (health_bp, chat_bp, context_bp, receipt_bp, kb_bp):
+        app.register_blueprint(bp)
+
+    return app
+
+
+app = create_app()
 
 
 if __name__ == "__main__":

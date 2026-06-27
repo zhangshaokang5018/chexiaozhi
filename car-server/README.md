@@ -1,6 +1,6 @@
 # 车小智服务端（car-server）
 
-车小智小程序服务端。当前为**最小基座（阶段 0）**，仅提供 `/api/ping`，用于验证小程序与服务端最小联通。
+车小智小程序服务端。基座已完成；当前采用 **Flask 蓝图(Blueprint)** 结构，A/B 各自的路由分文件管理，便于并行开发不冲突。
 
 ## 技术栈
 
@@ -12,12 +12,21 @@
 
 ```text
 car-server/
-  app.py            # Flask 入口，目前只有 /api/ping
-  requirements.txt  # 依赖
+  app.py              # 🔒 入口：创建 app + 注册所有蓝图（已冻结，勿改）
+  routes/
+    health.py         # 公共：/api/ping、/
+    chat.py           # A：/api/chat（占位，待 A 实现）
+    context.py        # B：/api/context（占位，待 B 实现）
+    receipt.py        # B：/api/receipt（占位，待 B 实现）
+    kb.py             # B：/api/kb/<kind>（已读取 knowledge 的基础实现）
+  agents/             # A：scheduler/symptom/dtc/part；B：maintain
+  services/           # B：context.py / receipt.py
+  knowledge/          # B 独家维护：kb_dtc / kb_cost / kb_symptom.json（起步数据已就绪）
+  requirements.txt
   README.md
 ```
 
-> 注：文档中规划的 `agents/`、`knowledge/`、`services/` 等目录属于后续阶段，基座阶段尚未创建。
+> 谁能改哪些文件、如何避免合并冲突，见 `docs/development/工程协作约定.md`。
 
 ## 本地启动
 
@@ -71,13 +80,16 @@ curl http://localhost:5000/api/ping
 
 ## 接口
 
-### GET `/api/ping`
+| 方法 | 路径 | 归属 | 状态 |
+| --- | --- | --- | --- |
+| GET | `/api/ping` | 公共 | ✅ 固定 JSON |
+| GET | `/` | 公共 | ✅ 服务信息 + 接口列表 |
+| POST | `/api/chat` | A | 🚧 占位，待实现 |
+| GET/POST | `/api/context` | B | 🚧 占位，待实现 |
+| POST | `/api/receipt` | B | 🚧 占位，待实现 |
+| GET | `/api/kb/<kind>` | B | ✅ 基础实现（读 knowledge，kind=dtc/cost/symptom） |
 
-用途：验证小程序与服务端联通。返回固定 JSON（见上）。
-
-### GET `/`
-
-根路径，返回服务信息与可用接口列表，方便浏览器直接确认服务已启动。
+> 占位接口会返回带 `"_stub": true` 的 JSON，仅用于先打通联通，字段以总文档第 6 节为准。
 
 ## 常见问题
 

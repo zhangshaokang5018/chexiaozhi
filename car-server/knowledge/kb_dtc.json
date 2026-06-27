@@ -1,0 +1,57 @@
+[
+  {
+    "code": "P0300",
+    "desc": "发动机缺火（随机/多缸）",
+    "cause": "点火线圈、火花塞、喷油嘴或进气泄漏",
+    "level": 3,
+    "logic": "先检查火花塞和点火线圈，再检查喷油与进气。",
+    "price_part_low": 800,
+    "price_part_high": 2000,
+    "price_labor_low": 200,
+    "price_labor_high": 500
+  },
+  {
+    "code": "P0301",
+    "desc": "第 1 缸缺火",
+    "cause": "对应缸火花塞/点火线圈故障，或喷油嘴堵塞",
+    "level": 2,
+    "logic": "先交换火花塞与点火线圈定位故障缸，再查喷油嘴。",
+    "price_part_low": 200,
+    "price_part_high": 800,
+    "price_labor_low": 100,
+    "price_labor_high": 300
+  },
+  {
+    "code": "P0171",
+    "desc": "燃油系统过稀（第 1 排）",
+    "cause": "进气泄漏、空气流量计脏污、燃油压力不足",
+    "level": 2,
+    "logic": "先清洗空气流量计，检查进气管路密封，再查燃油压力。",
+    "price_part_low": 150,
+    "price_part_high": 1200,
+    "price_labor_low": 100,
+    "price_labor_high": 400
+  },
+  {
+    "code": "P0420",
+    "desc": "催化转化器效率低于阈值（第 1 排）",
+    "cause": "三元催化老化、氧传感器故障、发动机缺火导致催化损坏",
+    "level": 2,
+    "logic": "先读氧传感器数据，排除缺火与漏气，再评估三元催化。",
+    "price_part_low": 1500,
+    "price_part_high": 6000,
+    "price_labor_low": 200,
+    "price_labor_high": 600
+  },
+  {
+    "code": "P0128",
+    "desc": "冷却液温度低于恒温器调节温度",
+    "cause": "节温器卡在开启位置，或冷却液温度传感器故障",
+    "level": 1,
+    "logic": "先检查节温器是否常开，再核对水温传感器读数。",
+    "price_part_low": 150,
+    "price_part_high": 600,
+    "price_labor_low": 100,
+    "price_labor_high": 300
+  }
+]

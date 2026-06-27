@@ -1,0 +1,47 @@
+[
+  {
+    "cat": "紧凑型轿车",
+    "item": "更换机油机滤",
+    "part_low": 300,
+    "part_high": 500,
+    "labor_low": 100,
+    "labor_high": 200,
+    "tip": "原厂机油溢价较高，副厂建议选择大品牌。"
+  },
+  {
+    "cat": "紧凑型轿车",
+    "item": "更换前刹车片",
+    "part_low": 200,
+    "part_high": 600,
+    "labor_low": 100,
+    "labor_high": 250,
+    "tip": "刹车片建议成对更换；同时检查刹车盘磨损。"
+  },
+  {
+    "cat": "紧凑型轿车",
+    "item": "更换火花塞",
+    "part_low": 200,
+    "part_high": 800,
+    "labor_low": 100,
+    "labor_high": 300,
+    "tip": "铱金火花塞寿命更长；注意按缸数整套更换。"
+  },
+  {
+    "cat": "紧凑型轿车",
+    "item": "更换空调滤芯",
+    "part_low": 30,
+    "part_high": 120,
+    "labor_low": 30,
+    "labor_high": 80,
+    "tip": "可自行更换，工时溢价不值，留意活性炭型号。"
+  },
+  {
+    "cat": "紧凑型轿车",
+    "item": "更换防冻液",
+    "part_low": 100,
+    "part_high": 300,
+    "labor_low": 80,
+    "labor_high": 200,
+    "tip": "注意冷却液型号与颜色不可混用；2-4 年更换一次。"
+  }
+]
