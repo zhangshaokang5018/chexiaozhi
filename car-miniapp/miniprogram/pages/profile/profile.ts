@@ -200,7 +200,7 @@ Page({
   },
 
   goChat() {
-    wx.navigateTo({ url: '/pages/chat/chat' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 
   goKb() {

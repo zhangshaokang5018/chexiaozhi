@@ -91,7 +91,7 @@ Page({
     wx.reLaunch({ url: '/pages/index/index' })
   },
   goChat() {
-    wx.navigateTo({ url: '/pages/chat/chat' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
   goKb() {
     wx.navigateTo({ url: '/pages/kb/kb' })

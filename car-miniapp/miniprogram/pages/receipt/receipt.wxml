@@ -22,7 +22,7 @@
         </view>
       </view>
       <view class="receipt-actions">
-        <view class="primary-btn" bindtap="goChat">💬 去咨询并生成诊断</view>
+        <view class="primary-btn" bindtap="goChat">💬 回首页生成诊断</view>
       </view>
     </view>
 

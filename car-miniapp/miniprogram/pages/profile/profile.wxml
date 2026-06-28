@@ -72,7 +72,7 @@
 
   <view class="tabbar">
     <view class="tabbar-item" bindtap="goHome"><text class="tabbar-icon">🏠</text><text>首页</text></view>
-    <view class="tabbar-item" bindtap="goChat"><text class="tabbar-icon">💬</text><text>咨询</text></view>
+    <view class="tabbar-item" bindtap="goChat"><text class="tabbar-icon">💬</text><text>诊断</text></view>
     <view class="tabbar-item" bindtap="goKb"><text class="tabbar-icon">📚</text><text>知识库</text></view>
     <view class="tabbar-item active"><text class="tabbar-icon">👤</text><text>我的</text></view>
   </view>

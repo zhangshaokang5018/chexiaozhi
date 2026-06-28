@@ -146,7 +146,7 @@ Page({
     const text = String(event.currentTarget.dataset.ask || '')
     if (!text) return
     wx.setStorageSync('cxz_pending_ask', text)
-    wx.navigateTo({ url: '/pages/chat/chat' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 
   goBack() {
@@ -163,7 +163,7 @@ Page({
   },
 
   goChat() {
-    wx.navigateTo({ url: '/pages/chat/chat' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 
   goProfile() {

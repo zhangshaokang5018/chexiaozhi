@@ -10,7 +10,7 @@
     <view class="nav-right"></view>
   </view>
 
-  <scroll-view class="content home-content" scroll-y enhanced>
+  <scroll-view class="content home-content" scroll-y enhanced scroll-into-view="{{scrollIntoView}}" scroll-with-animation>
     <view class="hero">
       <view class="hero-copy">
         <text class="hero-title">我是车小智</text>
@@ -39,6 +39,32 @@
       <view class="hot-question" bindtap="askHot" data-ask="充电桩显示握手失败，指示灯闪烁怎么办？"><text>4</text><view>充电桩显示握手失败，指示灯闪烁</view><text class="arr">›</text></view>
     </view>
 
+    <view class="home-chat-list" wx:if="{{messages.length}}">
+      <block wx:for="{{messages}}" wx:key="id">
+        <view class="home-msg {{item.type == 'user' ? 'user' : 'agent'}} {{item.type == 'loading' ? 'loading' : ''}}" id="home-msg-{{item.id}}">
+          <view class="home-bubble">
+            <image wx:if="{{item.imagePath}}" class="home-bubble-photo" src="{{item.imagePath}}" mode="aspectFill" />
+            <view wx:if="{{item.imageLabel}}" class="home-image-label">图片：{{item.imageLabel}}</view>
+            <view wx:if="{{item.type == 'user'}}">{{item.text}}</view>
+            <block wx:else>
+              <view class="home-agent-label">{{item.agentName}} · {{item.intent}}（{{item.confidenceText}}）</view>
+              <view class="home-answer-title" wx:if="{{item.reply.title}}">{{item.reply.title}}</view>
+              <view class="home-answer-summary" wx:if="{{item.reply.summary}}">{{item.reply.summary}}</view>
+              <block wx:if="{{item.reply.blocks}}">
+                <view wx:for="{{item.reply.blocks}}" wx:for-item="b" wx:key="label" class="home-answer-block {{b.type == 'warn' ? 'warn' : b.type == 'danger' ? 'danger' : ''}}">
+                  <text wx:if="{{b.type == 'warn'}}">⚠️ {{b.text}}</text>
+                  <text wx:elif="{{b.type == 'danger'}}">🚨 {{b.text || b.value}}</text>
+                  <text wx:else>{{b.label}}：{{b.value}}</text>
+                </view>
+              </block>
+              <view class="home-price" wx:if="{{item.reply.price_text}}">{{item.reply.price_text}}</view>
+              <view class="home-legal" wx:if="{{item.legal_note}}">{{item.legal_note}}</view>
+            </block>
+          </view>
+        </view>
+      </block>
+    </view>
+
     <view class="home-space"></view>
   </scroll-view>
 
@@ -51,11 +77,16 @@
     </scroll-view>
     <view class="home-input-row">
       <view class="input-icon-btn camera-icon" bindtap="goCamera" data-label="仪表盘">📷</view>
-      <view class="input-icon-btn mic-icon" bindtap="goChat">🎤</view>
+      <view
+        class="input-icon-btn mic-icon {{recording ? 'recording' : ''}}"
+        bindtouchstart="startRecord"
+        bindtouchend="finishRecord"
+        bindtouchcancel="cancelRecord"
+      >{{recording ? '●' : transcribing ? '…' : '🎤'}}</view>
       <input
         class="home-input"
         value="{{inputText}}"
-        placeholder="快来描述你遇到的问题～ ✨"
+        placeholder="{{recording ? '松手发送语音...' : loadingAgent ? '车小智正在分析...' : '快来描述你遇到的问题～ ✨'}}"
         confirm-type="send"
         bindinput="onInput"
         bindconfirm="sendHomeText"

@@ -150,6 +150,114 @@
   color: #64748b;
 }
 
+.home-chat-list {
+  margin-top: 24rpx;
+}
+
+.home-msg {
+  display: flex;
+  margin: 14rpx 0;
+}
+
+.home-msg.user {
+  justify-content: flex-end;
+}
+
+.home-msg.agent,
+.home-msg.loading {
+  justify-content: flex-start;
+}
+
+.home-bubble {
+  max-width: 86%;
+  padding: 18rpx 22rpx;
+  border-radius: 24rpx;
+  color: #e2e8f0;
+  font-size: 24rpx;
+  line-height: 1.55;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+
+.home-msg.user .home-bubble {
+  border-bottom-right-radius: 8rpx;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+}
+
+.home-msg.agent .home-bubble,
+.home-msg.loading .home-bubble {
+  border: 1rpx solid #334155;
+  border-bottom-left-radius: 8rpx;
+  background: #1e293b;
+}
+
+.home-agent-label {
+  margin-bottom: 8rpx;
+  color: #94a3b8;
+  font-size: 20rpx;
+}
+
+.home-answer-title {
+  margin-bottom: 8rpx;
+  color: #f8fafc;
+  font-size: 25rpx;
+  font-weight: 800;
+}
+
+.home-answer-summary {
+  color: #dbeafe;
+}
+
+.home-answer-block {
+  margin-top: 8rpx;
+  color: #cbd5e1;
+}
+
+.home-answer-block.warn {
+  padding: 10rpx 14rpx;
+  border-left: 4rpx solid #f59e0b;
+  border-radius: 10rpx;
+  background: rgba(245, 158, 11, .12);
+  color: #fcd34d;
+}
+
+.home-answer-block.danger {
+  color: #fecaca;
+  font-weight: 700;
+}
+
+.home-price {
+  display: inline-flex;
+  margin-top: 10rpx;
+  padding: 8rpx 14rpx;
+  border-radius: 12rpx;
+  background: rgba(16, 185, 129, .12);
+  color: #6ee7b7;
+  font-weight: 800;
+}
+
+.home-legal {
+  margin-top: 10rpx;
+  color: #64748b;
+  font-size: 20rpx;
+}
+
+.home-bubble-photo {
+  display: block;
+  width: 220rpx;
+  height: 160rpx;
+  margin-bottom: 10rpx;
+  border-radius: 14rpx;
+  background: #0f172a;
+}
+
+.home-image-label {
+  margin-bottom: 6rpx;
+  color: #bfdbfe;
+  font-size: 22rpx;
+}
+
 .home-space {
   height: 28rpx;
 }
@@ -231,6 +339,11 @@
 
 .mic-icon {
   font-size: 19rpx;
+}
+
+.mic-icon.recording {
+  background: linear-gradient(135deg, #ef4444, #f59e0b);
+  box-shadow: 0 0 0 8rpx rgba(239, 68, 68, .15);
 }
 
 .send-icon {

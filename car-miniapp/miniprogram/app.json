@@ -1,8 +1,6 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/chat/chat",
-    "pages/camera/camera",
     "pages/kb/kb",
     "pages/profile/profile",
     "pages/consultations/consultations",

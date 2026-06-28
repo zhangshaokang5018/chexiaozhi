@@ -60,7 +60,7 @@ Page({
   goChat() {
     const ask = this.data.code + ' 是什么意思？'
     wx.setStorageSync('cxz_pending_ask', ask)
-    wx.navigateTo({ url: '/pages/chat/chat' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 
   goBack() {
