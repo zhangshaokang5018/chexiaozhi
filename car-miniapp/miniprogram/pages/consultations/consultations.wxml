@@ -1,0 +1,44 @@
+<view class="screen consultations-screen">
+  <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
+  <view class="nav-bar">
+    <view class="nav-left" bindtap="goBack">‹</view>
+    <view class="nav-title">咨询记录</view>
+    <view class="nav-right"></view>
+  </view>
+
+  <scroll-view class="content consultations-content" scroll-y>
+    <view wx:if="{{loading}}" class="state-card">正在加载咨询记录...</view>
+    <view wx:elif="{{!userId}}" class="state-card">
+      <view class="state-title">未登录</view>
+      <view class="state-copy">登录后可以查看已保存的咨询结论快照。</view>
+      <button class="primary-btn" bindtap="goLogin">去登录</button>
+    </view>
+    <view wx:else>
+      <view wx:if="{{errorText}}" class="error-card">{{errorText}}</view>
+      <view wx:if="{{items.length === 0 && !errorText}}" class="state-card">
+        <view class="state-title">暂无咨询记录</view>
+        <view class="state-copy">咨询完成后会保存当时的结论与来源，之后可在这里回看。</view>
+      </view>
+
+      <view wx:if="{{active}}" class="detail-panel">
+        <view class="detail-title">{{active.title || active.question}}</view>
+        <view class="detail-meta">{{active.created_at}} · {{active.agent || '咨询'}} · {{active.intent || '未分类'}}</view>
+        <view class="detail-summary">{{active.summary}}</view>
+        <view class="source-row" wx:for="{{active.sources}}" wx:key="item_id">
+          <text>{{item.kind || 'source'}}</text>
+          <text>{{item.title || item.item_id}}</text>
+        </view>
+      </view>
+
+      <view class="list-panel" wx:if="{{items.length}}">
+        <view class="list-title">全部记录</view>
+        <view wx:for="{{items}}" wx:key="consultation_id" class="consult-item" data-id="{{item.consultation_id}}" bindtap="openItem">
+          <text class="consult-title">{{item.title || item.question}}</text>
+          <text class="consult-meta">{{item.created_at}} · {{item.agent || '咨询'}}</text>
+          <text class="consult-summary">{{item.summary || item.intent}}</text>
+        </view>
+        <button wx:if="{{items.length < total}}" class="ghost-btn load-more" bindtap="loadMore" loading="{{loadingMore}}">加载更多</button>
+      </view>
+    </view>
+  </scroll-view>
+</view>

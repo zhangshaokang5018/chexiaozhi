@@ -1,5 +1,6 @@
 import {
   clearSession,
+  getConsultations,
   getProfile,
   getRepairs,
   getStats,
@@ -8,6 +9,7 @@ import {
   updateProfile,
   updateVehicle,
   UserProfile,
+  UserConsultationItem,
   UserRepairItem,
   UserStats,
   UserVehicle,
@@ -41,6 +43,10 @@ function safeRepairs(value: UserRepairItem[] | undefined): UserRepairItem[] {
   return Array.isArray(value) ? value : []
 }
 
+function safeConsultations(value: UserConsultationItem[] | undefined): UserConsultationItem[] {
+  return Array.isArray(value) ? value : []
+}
+
 type ProfileInputEvent = WechatMiniprogram.Input<
   WechatMiniprogram.IAnyObject,
   { field: 'nickname' | 'car_model' | 'vin' | 'mileage' | 'location' }
@@ -56,6 +62,7 @@ Page({
     stats: EMPTY_STATS,
     vehicle: EMPTY_VEHICLE,
     repairs: [] as UserRepairItem[],
+    consultations: [] as UserConsultationItem[],
   },
 
   onShow() {
@@ -73,30 +80,50 @@ Page({
         stats: EMPTY_STATS,
         vehicle: EMPTY_VEHICLE,
         repairs: [],
+        consultations: [],
       })
       return
     }
 
-    this.setData({ userId, loading: true, errorText: '' })
-    Promise.all([getProfile(userId), getStats(userId), getVehicle(userId), getRepairs(userId)])
-      .then(([profile, stats, vehicle, repairs]) => {
+    this.setData({ userId, loading: true, errorText: '', repairs: [], consultations: [] })
+    Promise.all([getProfile(userId), getStats(userId), getVehicle(userId)])
+      .then(([profile, stats, vehicle]) => {
         this.setData({
           profile,
           stats,
           vehicle,
-          repairs: safeRepairs(repairs && repairs.items),
           loading: false,
           errorText: '',
         })
+        this.loadRecordPreviews(userId)
       })
       .catch((err) => {
         console.error('load user data failed', err)
         this.setData({
           loading: false,
           repairs: [],
+          consultations: [],
           errorText: '用户数据加载失败，请确认 /api/user/* 与 MySQL 已就绪',
         })
       })
+  },
+
+  loadRecordPreviews(userId: string) {
+    Promise.all([
+      getRepairs(userId, 1, 3).catch((err) => {
+        console.error('load repairs preview failed', err)
+        return null
+      }),
+      getConsultations(userId, 1, 3).catch((err) => {
+        console.error('load consultations preview failed', err)
+        return null
+      }),
+    ]).then(([repairs, consultations]) => {
+      this.setData({
+        repairs: repairs ? safeRepairs(repairs.items) : [],
+        consultations: consultations ? safeConsultations(consultations.items) : [],
+      })
+    })
   },
 
   onFieldInput(event: ProfileInputEvent) {
@@ -182,5 +209,14 @@ Page({
 
   goReceipt() {
     wx.navigateTo({ url: '/pages/receipt/receipt' })
+  },
+
+  openRepair(event: WechatMiniprogram.TouchEvent) {
+    const receiptId = String(event.currentTarget.dataset.receiptId || '')
+    wx.navigateTo({ url: receiptId ? `/pages/receipt/receipt?receipt_id=${encodeURIComponent(receiptId)}` : '/pages/receipt/receipt' })
+  },
+
+  goConsultations() {
+    wx.navigateTo({ url: '/pages/consultations/consultations' })
   },
 })

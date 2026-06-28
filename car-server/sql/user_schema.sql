@@ -88,6 +88,47 @@ CREATE TABLE IF NOT EXISTS user_stats (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户统计';
 
 -- -------------------------------------------------------------
+-- 5. user_consultations —— 咨询记录快照（对应 GET/POST /api/user/consultations）
+--    consultation_id 由 A 的 /api/chat 生成，B 使用它做幂等键。
+--    reply_snapshot/sources 保存当时的诊断结论和来源，历史详情不重新运行 Agent/RAG。
+-- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS user_consultations (
+  consultation_id VARCHAR(96) NOT NULL,
+  user_id         VARCHAR(64) NOT NULL,
+  question        TEXT        NOT NULL,
+  agent           VARCHAR(32) NOT NULL DEFAULT '',
+  intent          VARCHAR(64) NOT NULL DEFAULT '',
+  title           VARCHAR(128) NOT NULL DEFAULT '',
+  summary         TEXT        NOT NULL,
+  reply_snapshot  JSON        NOT NULL,
+  sources         JSON        NOT NULL,
+  created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (consultation_id),
+  KEY idx_consultations_user_time (user_id, created_at),
+  CONSTRAINT fk_consultations_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户咨询记录快照';
+
+-- -------------------------------------------------------------
+-- 6. user_repairs —— 维修记录快照（对应 GET/POST /api/user/repairs）
+--    receipt_id 由 A 的 /api/receipt 生成，B 使用它做幂等键。
+--    receipt_snapshot 保存当时的存根内容，服务重启后仍可查询。
+-- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS user_repairs (
+  receipt_id       VARCHAR(96) NOT NULL,
+  user_id          VARCHAR(64) NOT NULL,
+  title            VARCHAR(128) NOT NULL DEFAULT '',
+  summary          TEXT        NOT NULL,
+  total            INT         NOT NULL DEFAULT 0,
+  receipt_snapshot JSON        NOT NULL,
+  created_at       DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at       DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (receipt_id),
+  KEY idx_repairs_user_time (user_id, created_at),
+  CONSTRAINT fk_repairs_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户维修记录快照';
+
+-- -------------------------------------------------------------
 -- 可选：本地联调用的演示账号（与 03 契约示例一致）。
 -- 正式环境请删除或改由登录流程创建。
 -- -------------------------------------------------------------
@@ -104,4 +145,47 @@ ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
 
 INSERT INTO user_stats (user_id, consult_count, receipt_count, estimated_saved)
 VALUES ('user_10001', 12, 3, 680)
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+INSERT INTO user_consultations
+  (consultation_id, user_id, question, agent, intent, title, summary, reply_snapshot, sources, created_at)
+VALUES
+  (
+    'c_demo_001',
+    'user_10001',
+    'P0300 是什么意思',
+    'dtc',
+    '故障码解读',
+    'P0300 故障码解读',
+    '发动机随机/多缸缺火，需要优先检查点火、燃油和进气系统。',
+    JSON_OBJECT(
+      'title', 'P0300 故障码解读',
+      'summary', '发动机随机/多缸缺火，需要优先检查点火、燃油和进气系统。',
+      'price_text', '1000-2500 元',
+      'price_range', JSON_ARRAY(1000, 2500)
+    ),
+    JSON_ARRAY(JSON_OBJECT('kind', 'dtc', 'item_id', 'P0300', 'title', '发动机缺火（随机/多缸）')),
+    '2026-06-28 10:30:00'
+  )
+ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;
+
+INSERT INTO user_repairs
+  (receipt_id, user_id, title, summary, total, receipt_snapshot, created_at)
+VALUES
+  (
+    'r_demo_001',
+    'user_10001',
+    '机油机滤保养建议',
+    '车智汇授权维修中心 · 1 个项目',
+    550,
+    JSON_OBJECT(
+      'shop', '车智汇授权维修中心',
+      'car_model', '2022款 丰田 卡罗拉 1.2T 豪华版',
+      'vin', 'LFMA*********3456',
+      'total', 550,
+      'created_at', '2026-06-28 10:35:00',
+      'items', JSON_ARRAY(JSON_OBJECT('item', '更换机油机滤', 'avg', 550))
+    ),
+    '2026-06-28 10:35:00'
+  )
 ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP;

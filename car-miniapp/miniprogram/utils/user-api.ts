@@ -114,16 +114,77 @@ export interface UserVehicle {
 
 export interface UserRepairItem {
   id: string
+  receipt_id: string
   title: string
   summary: string
   created_at: string
   total: number
+  receipt_snapshot?: Record<string, unknown>
 }
 
 export interface UserRepairs {
   user_id: string
+  total: number
+  page: number
+  page_size: number
   count: number
   items: UserRepairItem[]
+}
+
+export interface SaveRepairPayload {
+  user_id: string
+  receipt_id: string
+  title?: string
+  summary?: string
+  total?: number
+  receipt_snapshot: Record<string, unknown>
+  created_at?: string
+}
+
+export interface SaveRepairResp {
+  ok: true
+  created: boolean
+  item: UserRepairItem
+}
+
+export interface UserConsultationItem {
+  consultation_id: string
+  question: string
+  agent: string
+  intent: string
+  title: string
+  summary: string
+  reply_snapshot: Record<string, unknown>
+  sources: Array<Record<string, unknown>>
+  created_at: string
+}
+
+export interface UserConsultations {
+  user_id: string
+  total: number
+  page: number
+  page_size: number
+  count: number
+  items: UserConsultationItem[]
+}
+
+export interface SaveConsultationPayload {
+  user_id: string
+  consultation_id: string
+  question: string
+  agent?: string
+  intent?: string
+  title?: string
+  summary?: string
+  reply_snapshot: Record<string, unknown>
+  sources?: Array<Record<string, unknown>>
+  created_at?: string
+}
+
+export interface SaveConsultationResp {
+  ok: true
+  created: boolean
+  item: UserConsultationItem
 }
 
 export function login(payload: LoginPayload): Promise<LoginResp> {
@@ -158,6 +219,27 @@ export function updateVehicle(payload: Pick<UserVehicle, 'user_id'> & Partial<Om
   return userRequest<UserVehicle>({ url: '/api/user/vehicle', method: 'PATCH', data: payload })
 }
 
-export function getRepairs(user_id: string): Promise<UserRepairs> {
-  return userRequest<UserRepairs>({ url: `/api/user/repairs${buildQuery({ user_id })}` })
+export function getRepairs(user_id: string, page = 1, page_size = 20, receipt_id = ''): Promise<UserRepairs> {
+  return userRequest<UserRepairs>({
+    url: `/api/user/repairs${buildQuery({ user_id, page: String(page), page_size: String(page_size), receipt_id })}`,
+  })
+}
+
+export function saveRepair(payload: SaveRepairPayload): Promise<SaveRepairResp> {
+  return userRequest<SaveRepairResp>({ url: '/api/user/repairs', method: 'POST', data: payload })
+}
+
+export function getConsultations(user_id: string, page = 1, page_size = 20, consultation_id = ''): Promise<UserConsultations> {
+  return userRequest<UserConsultations>({
+    url: `/api/user/consultations${buildQuery({
+      user_id,
+      page: String(page),
+      page_size: String(page_size),
+      consultation_id,
+    })}`,
+  })
+}
+
+export function saveConsultation(payload: SaveConsultationPayload): Promise<SaveConsultationResp> {
+  return userRequest<SaveConsultationResp>({ url: '/api/user/consultations', method: 'POST', data: payload })
 }

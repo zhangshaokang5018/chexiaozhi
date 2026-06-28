@@ -132,9 +132,43 @@ def update_vehicle():
 @user_bp.get("/api/user/repairs")
 def get_repairs():
     user_id = _user_id_from_request()
+    page = int(request.args.get("page") or 1)
+    page_size = int(request.args.get("page_size") or 20)
+    receipt_id = (request.args.get("receipt_id") or "").strip()
 
     def action():
         _require_user_id(user_id)
-        return user_service.get_repairs(user_id)
+        return user_service.get_repairs(user_id, page=page, page_size=page_size, receipt_id=receipt_id)
 
     return _ok(action)
+
+
+@user_bp.post("/api/user/repairs")
+def save_repair():
+    payload = _json_payload()
+    return _ok(lambda: user_service.save_repair(payload))
+
+
+@user_bp.get("/api/user/consultations")
+def get_consultations():
+    user_id = _user_id_from_request()
+    page = int(request.args.get("page") or 1)
+    page_size = int(request.args.get("page_size") or 20)
+    consultation_id = (request.args.get("consultation_id") or "").strip()
+
+    def action():
+        _require_user_id(user_id)
+        return user_service.get_consultations(
+            user_id,
+            page=page,
+            page_size=page_size,
+            consultation_id=consultation_id,
+        )
+
+    return _ok(action)
+
+
+@user_bp.post("/api/user/consultations")
+def save_consultation():
+    payload = _json_payload()
+    return _ok(lambda: user_service.save_consultation(payload))

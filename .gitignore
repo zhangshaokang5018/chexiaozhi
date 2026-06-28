@@ -2,3 +2,8 @@ node_modules/
 car-miniapp/node_modules/
 
 *.log
+
+# Local environment and user-system data may contain PII or tokens.
+.env
+car-server/.env
+car-server/data/

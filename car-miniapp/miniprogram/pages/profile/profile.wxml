@@ -44,17 +44,27 @@
       <view class="repair-list">
         <view class="car-title">维修记录入口</view>
         <view wx:if="{{repairs.length === 0}}" class="empty-line">暂无维修记录</view>
-        <view wx:for="{{repairs}}" wx:key="id" class="repair-item" bindtap="goReceipt">
+        <view wx:for="{{repairs}}" wx:key="receipt_id" class="repair-item" data-receipt-id="{{item.receipt_id}}" bindtap="openRepair">
           <text class="repair-title">{{item.title}}</text>
           <text class="repair-meta">{{item.created_at}} · ¥{{item.total}}</text>
           <text class="repair-summary">{{item.summary}}</text>
         </view>
       </view>
 
+      <view class="repair-list">
+        <view class="car-title">咨询记录入口</view>
+        <view wx:if="{{consultations.length === 0}}" class="empty-line">暂无咨询记录</view>
+        <view wx:for="{{consultations}}" wx:key="consultation_id" class="repair-item" bindtap="goConsultations">
+          <text class="repair-title">{{item.title || item.question}}</text>
+          <text class="repair-meta">{{item.created_at}} · {{item.agent || '咨询'}}</text>
+          <text class="repair-summary">{{item.summary || item.intent}}</text>
+        </view>
+      </view>
+
       <view class="menu-list">
         <view class="menu-item" bindtap="goReceipt"><text class="emoji">🧾</text><text class="label">我的维修记录</text><text class="arrow">›</text></view>
         <view class="menu-item" bindtap="goPrivacy"><text class="emoji">🔒</text><text class="label">隐私与私人信息</text><text class="arrow">›</text></view>
-        <view class="menu-item"><text class="emoji">⭐</text><text class="label">收藏的诊断结论</text><text class="badge">{{stats.favorite_count}}</text></view>
+        <view class="menu-item" bindtap="goConsultations"><text class="emoji">💬</text><text class="label">咨询记录</text><text class="badge">{{stats.consult_count}}</text></view>
         <view class="menu-item" bindtap="logout"><text class="emoji">↩</text><text class="label">退出登录</text><text class="arrow">›</text></view>
       </view>
     </view>

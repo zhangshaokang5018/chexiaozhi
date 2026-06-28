@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import secrets
 import time
 from typing import Any
 
+from services.db import DatabaseUnavailable
 from services.db import get_connection
 
 
@@ -36,6 +38,58 @@ def _format_dt(value: Any) -> str:
     if hasattr(value, "strftime"):
         return value.strftime("%Y-%m-%d %H:%M:%S")
     return str(value)
+
+
+def _json_dumps(value: Any) -> str:
+    return json.dumps(value if value is not None else {}, ensure_ascii=False, separators=(",", ":"))
+
+
+def _json_loads(value: Any, fallback: Any) -> Any:
+    if value is None:
+        return fallback
+    if isinstance(value, (dict, list)):
+        return value
+    if isinstance(value, (bytes, bytearray)):
+        value = value.decode("utf-8")
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return fallback
+    return fallback
+
+
+def _as_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _page(value: Any, default: int = 1) -> int:
+    return max(1, _as_int(value, default))
+
+
+def _page_size(value: Any, default: int = 20) -> int:
+    return max(1, min(_as_int(value, default), 50))
+
+
+def _created_at_from(payload: dict[str, Any], snapshot: dict[str, Any] | None = None) -> str:
+    raw = str(payload.get("created_at") or (snapshot or {}).get("created_at") or "").strip()
+    if not raw:
+        return ""
+    raw = raw.replace("T", " ").replace("Z", "")
+    if "+" in raw:
+        raw = raw.split("+", 1)[0]
+    return raw[:19]
+
+
+def _is_missing_record_table_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return (
+        ("user_repairs" in text or "user_consultations" in text)
+        and ("doesn't exist" in text or "does not exist" in text or "1146" in text or "no such table" in text)
+    )
 
 
 def _new_user_id() -> str:
@@ -251,19 +305,251 @@ def update_vehicle(user_id: str, payload: dict[str, Any]) -> dict[str, Any]:
     return get_vehicle(user_id)
 
 
-def get_repairs(user_id: str) -> dict[str, Any]:
-    stats = get_stats(user_id)
-    count = stats["receipt_count"]
-    items: list[dict[str, Any]] = []
-    if count > 0:
-        items = [
-            {
-                "id": "repair_demo_001",
-                "title": "机油机滤保养建议",
-                "summary": "来自用户体系的演示维修记录入口，详情仍由 A 的存根页承接。",
-                "created_at": "2026-06-27 10:00:00",
-                "total": 550,
-            }
-        ]
+def _format_repair(row: dict[str, Any], include_snapshot: bool = True) -> dict[str, Any]:
+    item = {
+        "id": row["receipt_id"],
+        "receipt_id": row["receipt_id"],
+        "title": row.get("title") or "维修记录",
+        "summary": row.get("summary") or "",
+        "created_at": _format_dt(row.get("created_at")),
+        "total": int(row.get("total") or 0),
+    }
+    if include_snapshot:
+        item["receipt_snapshot"] = _json_loads(row.get("receipt_snapshot"), {})
+    return item
 
-    return {"user_id": user_id, "count": len(items), "items": items}
+
+def _format_consultation(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "consultation_id": row["consultation_id"],
+        "question": row.get("question") or "",
+        "agent": row.get("agent") or "",
+        "intent": row.get("intent") or "",
+        "title": row.get("title") or "",
+        "summary": row.get("summary") or "",
+        "reply_snapshot": _json_loads(row.get("reply_snapshot"), {}),
+        "sources": _json_loads(row.get("sources"), []),
+        "created_at": _format_dt(row.get("created_at")),
+    }
+
+
+def _empty_repairs(user_id: str, page: int, page_size: int) -> dict[str, Any]:
+    return {"user_id": user_id, "total": 0, "page": page, "page_size": page_size, "count": 0, "items": []}
+
+
+def get_repairs(user_id: str, page: int = 1, page_size: int = 20, receipt_id: str = "") -> dict[str, Any]:
+    page = _page(page)
+    page_size = _page_size(page_size)
+    receipt_id = (receipt_id or "").strip()
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                _require_user(cursor, user_id)
+                if receipt_id:
+                    cursor.execute(
+                        "SELECT * FROM user_repairs WHERE user_id=%s AND receipt_id=%s",
+                        (user_id, receipt_id),
+                    )
+                    row = cursor.fetchone()
+                    items = [_format_repair(row)] if row else []
+                    return {"user_id": user_id, "total": len(items), "page": 1, "page_size": 1, "count": len(items), "items": items}
+
+                cursor.execute("SELECT COUNT(*) AS total FROM user_repairs WHERE user_id=%s", (user_id,))
+                total = int((cursor.fetchone() or {}).get("total") or 0)
+                cursor.execute(
+                    """
+                    SELECT * FROM user_repairs
+                    WHERE user_id=%s
+                    ORDER BY created_at DESC, receipt_id DESC
+                    LIMIT %s OFFSET %s
+                    """,
+                    (user_id, page_size, (page - 1) * page_size),
+                )
+                items = [_format_repair(row, include_snapshot=False) for row in cursor.fetchall()]
+    except DatabaseUnavailable:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        if _is_missing_record_table_error(exc):
+            return _empty_repairs(user_id, page, page_size)
+        raise
+
+    return {"user_id": user_id, "total": total, "page": page, "page_size": page_size, "count": len(items), "items": items}
+
+
+def save_repair(payload: dict[str, Any]) -> dict[str, Any]:
+    user_id = str(payload.get("user_id") or "").strip()
+    receipt_id = str(payload.get("receipt_id") or "").strip()
+    if not user_id:
+        raise ValueError("缺少 user_id")
+    if not receipt_id:
+        raise ValueError("缺少 receipt_id")
+
+    snapshot = payload.get("receipt_snapshot")
+    if not isinstance(snapshot, dict):
+        snapshot = {}
+    total = _as_int(snapshot.get("total") or payload.get("total"), 0)
+    title = str(payload.get("title") or snapshot.get("title") or snapshot.get("shop") or "维修记录").strip()
+    items = snapshot.get("items")
+    item_count = len(items) if isinstance(items, list) else 0
+    summary = str(payload.get("summary") or f"{snapshot.get('shop') or '维修存根'} · {item_count} 个项目").strip()
+    created_at = _created_at_from(payload, snapshot)
+
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            _require_user(cursor, user_id)
+            _ensure_child_rows(cursor, user_id)
+            cursor.execute("SELECT * FROM user_repairs WHERE receipt_id=%s", (receipt_id,))
+            existing = cursor.fetchone()
+            if existing:
+                return {"ok": True, "created": False, "item": _format_repair(existing)}
+
+            if created_at:
+                cursor.execute(
+                    """
+                    INSERT INTO user_repairs
+                      (receipt_id, user_id, title, summary, total, receipt_snapshot, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (receipt_id, user_id, title, summary, total, _json_dumps(snapshot), created_at),
+                )
+            else:
+                cursor.execute(
+                    """
+                    INSERT INTO user_repairs
+                      (receipt_id, user_id, title, summary, total, receipt_snapshot)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (receipt_id, user_id, title, summary, total, _json_dumps(snapshot)),
+                )
+            cursor.execute(
+                "UPDATE user_stats SET receipt_count=receipt_count+1 WHERE user_id=%s",
+                (user_id,),
+            )
+            cursor.execute("SELECT * FROM user_repairs WHERE receipt_id=%s", (receipt_id,))
+            row = cursor.fetchone()
+
+    return {"ok": True, "created": True, "item": _format_repair(row)}
+
+
+def _empty_consultations(user_id: str, page: int, page_size: int) -> dict[str, Any]:
+    return {"user_id": user_id, "total": 0, "page": page, "page_size": page_size, "count": 0, "items": []}
+
+
+def get_consultations(user_id: str, page: int = 1, page_size: int = 20, consultation_id: str = "") -> dict[str, Any]:
+    page = _page(page)
+    page_size = _page_size(page_size)
+    consultation_id = (consultation_id or "").strip()
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                _require_user(cursor, user_id)
+                if consultation_id:
+                    cursor.execute(
+                        "SELECT * FROM user_consultations WHERE user_id=%s AND consultation_id=%s",
+                        (user_id, consultation_id),
+                    )
+                    row = cursor.fetchone()
+                    items = [_format_consultation(row)] if row else []
+                    return {"user_id": user_id, "total": len(items), "page": 1, "page_size": 1, "count": len(items), "items": items}
+
+                cursor.execute("SELECT COUNT(*) AS total FROM user_consultations WHERE user_id=%s", (user_id,))
+                total = int((cursor.fetchone() or {}).get("total") or 0)
+                cursor.execute(
+                    """
+                    SELECT * FROM user_consultations
+                    WHERE user_id=%s
+                    ORDER BY created_at DESC, consultation_id DESC
+                    LIMIT %s OFFSET %s
+                    """,
+                    (user_id, page_size, (page - 1) * page_size),
+                )
+                items = [_format_consultation(row) for row in cursor.fetchall()]
+    except DatabaseUnavailable:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        if _is_missing_record_table_error(exc):
+            return _empty_consultations(user_id, page, page_size)
+        raise
+
+    return {"user_id": user_id, "total": total, "page": page, "page_size": page_size, "count": len(items), "items": items}
+
+
+def save_consultation(payload: dict[str, Any]) -> dict[str, Any]:
+    user_id = str(payload.get("user_id") or "").strip()
+    consultation_id = str(payload.get("consultation_id") or "").strip()
+    if not user_id:
+        raise ValueError("缺少 user_id")
+    if not consultation_id:
+        raise ValueError("缺少 consultation_id")
+
+    reply_snapshot = payload.get("reply_snapshot")
+    if not isinstance(reply_snapshot, dict):
+        reply_snapshot = {}
+    sources = payload.get("sources")
+    if not isinstance(sources, list):
+        sources = []
+    question = str(payload.get("question") or "").strip()
+    agent = str(payload.get("agent") or "").strip()
+    intent = str(payload.get("intent") or "").strip()
+    title = str(payload.get("title") or reply_snapshot.get("title") or question or "咨询记录").strip()
+    summary = str(payload.get("summary") or reply_snapshot.get("summary") or "").strip()
+    created_at = _created_at_from(payload)
+
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            _require_user(cursor, user_id)
+            _ensure_child_rows(cursor, user_id)
+            cursor.execute("SELECT * FROM user_consultations WHERE consultation_id=%s", (consultation_id,))
+            existing = cursor.fetchone()
+            if existing:
+                return {"ok": True, "created": False, "item": _format_consultation(existing)}
+
+            if created_at:
+                cursor.execute(
+                    """
+                    INSERT INTO user_consultations
+                      (consultation_id, user_id, question, agent, intent, title, summary, reply_snapshot, sources, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        consultation_id,
+                        user_id,
+                        question,
+                        agent,
+                        intent,
+                        title,
+                        summary,
+                        _json_dumps(reply_snapshot),
+                        _json_dumps(sources),
+                        created_at,
+                    ),
+                )
+            else:
+                cursor.execute(
+                    """
+                    INSERT INTO user_consultations
+                      (consultation_id, user_id, question, agent, intent, title, summary, reply_snapshot, sources)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        consultation_id,
+                        user_id,
+                        question,
+                        agent,
+                        intent,
+                        title,
+                        summary,
+                        _json_dumps(reply_snapshot),
+                        _json_dumps(sources),
+                    ),
+                )
+            cursor.execute(
+                "UPDATE user_stats SET consult_count=consult_count+1 WHERE user_id=%s",
+                (user_id,),
+            )
+            cursor.execute("SELECT * FROM user_consultations WHERE consultation_id=%s", (consultation_id,))
+            row = cursor.fetchone()
+
+    return {"ok": True, "created": True, "item": _format_consultation(row)}
