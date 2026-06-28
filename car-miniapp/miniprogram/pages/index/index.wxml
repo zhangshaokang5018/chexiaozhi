@@ -50,8 +50,8 @@
       <text class="qt" bindtap="goKb">🔧 维修指南</text>
     </scroll-view>
     <view class="home-input-row">
-      <button class="input-icon-btn camera-icon" bindtap="goCamera" data-label="仪表盘">📷</button>
-      <button class="input-icon-btn mic-icon" bindtap="goChat">🎤</button>
+      <view class="input-icon-btn camera-icon" bindtap="goCamera" data-label="仪表盘">📷</view>
+      <view class="input-icon-btn mic-icon" bindtap="goChat">🎤</view>
       <input
         class="home-input"
         value="{{inputText}}"
@@ -60,7 +60,7 @@
         bindinput="onInput"
         bindconfirm="sendHomeText"
       />
-      <button class="input-icon-btn send-icon" bindtap="sendHomeText">➤</button>
+      <view class="input-icon-btn send-icon" bindtap="sendHomeText">➤</view>
     </view>
   </view>
 </view>
