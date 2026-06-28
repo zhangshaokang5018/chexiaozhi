@@ -18,7 +18,7 @@
         <text class="hero-desc">遇到故障不用慌，赶紧告诉我～</text>
       </view>
       <view class="hero-mascot">
-        <text>🚗</text>
+        <image class="hero-mascot-img" src="/assets/chexiaozhi_ms.png" mode="aspectFit" />
       </view>
     </view>
 
