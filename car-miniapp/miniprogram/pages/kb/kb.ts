@@ -287,12 +287,10 @@ Page({
   openItem(event: WechatMiniprogram.TouchEvent) {
     const kind = String(event.currentTarget.dataset.kind || '')
     const id = String(event.currentTarget.dataset.id || '')
-    if (kind === 'dtc' && id) {
-      wx.navigateTo({ url: `/pages/detail/detail?code=${encodeURIComponent(id)}` })
-      return
-    }
-    const text = String(event.currentTarget.dataset.ask || '')
-    this.askText(text)
+    if (!kind || !id) return
+    wx.navigateTo({
+      url: `/pages/detail/detail?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}&code=${encodeURIComponent(id)}`,
+    })
   },
 
   askItem(event: WechatMiniprogram.TouchEvent) {

@@ -1,56 +1,55 @@
-<view class="screen">
+<view class="screen detail-screen">
   <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
   <view class="nav-bar">
     <view class="nav-left" bindtap="goBack">‹</view>
-    <view class="nav-title">车小智</view>
+    <view class="nav-title">{{detail.navTitle}}</view>
     <view class="nav-right"></view>
   </view>
 
-  <scroll-view class="content detail-content" scroll-y>
+  <scroll-view class="content detail-content" scroll-y enhanced>
     <view wx:if="{{loading}}" class="state">详情加载中...</view>
     <view wx:elif="{{errorText}}" class="state error">{{errorText}}</view>
 
     <block wx:else>
-      <view class="detail-top">
-        <text class="detail-code">{{code}}</text>
-        <text class="detail-name">{{item.summary}}</text>
-        <text class="detail-level">🔧 修复难度 {{item.stars}}（{{item.level_text}}）</text>
+      <view class="detail-hero {{detail.tone}}">
+        <view class="hero-copy">
+          <text class="detail-code">{{detail.heroTitle}}</text>
+          <text class="detail-name">{{detail.heroSub}}</text>
+          <text class="detail-level">🔧 {{detail.heroTag}}</text>
+        </view>
         <text class="detail-bg">⚠</text>
       </view>
 
-      <view class="card detail-card">
-        <view class="detail-card-title">🗣 通俗解释</view>
-        <text>{{raw.plain}}</text>
-      </view>
-
-      <view class="card detail-card">
-        <view class="detail-card-title">🎯 可能原因</view>
-        <text>{{raw.cause}}</text>
-      </view>
-
-      <view class="card detail-card">
-        <view class="detail-card-title">🚀 建议排查步骤</view>
-        <text>{{raw.logic}}</text>
-      </view>
-
-      <view class="card detail-card">
-        <view class="detail-card-title">💰 费用参考</view>
-        <view class="price-box">
-          <text class="price-label">市场总价区间</text>
-          <text class="price-value">¥ {{totalLow}} <text>~ ¥ {{totalHigh}}</text></text>
+      <view class="detail-card">
+        <view class="detail-card-title">{{detail.reasonTitle}}</view>
+        <view wx:for="{{detail.reasonLines}}" wx:key="text" class="detail-line">
+          {{index + 1}}. {{item.text}}
         </view>
-        <text>· 零件参考价：约 ¥ {{raw.price_part_low}}-{{raw.price_part_high}}</text>
-        <text>· 工时参考价：约 ¥ {{raw.price_labor_low}}-{{raw.price_labor_high}}</text>
       </view>
 
-      <view class="card detail-card danger-card">
-        <view class="detail-card-title danger-title">⚠️ 避坑提示</view>
-        <text wx:if="{{isDanger}}">该故障风险较高，请尽快到正规维修点检测，避免扩大损伤。如建议“直接大拆解”，要求先按低成本方案逐项排查。</text>
-        <text wx:else>如维修店建议“直接拆解发动机”，请要求先按低成本方案逐项排查；多家门店报价再决策，避免过度维修。</text>
+      <view class="detail-card">
+        <view class="detail-card-title">{{detail.stepTitle}}</view>
+        <view wx:for="{{detail.steps}}" wx:key="no" class="step-item">
+          <text class="step-num">{{item.no}}</text>
+          <text class="step-text">{{item.text}}</text>
+        </view>
       </view>
 
-      <view class="primary-btn" bindtap="goChat">💬 立即咨询 Agent</view>
+      <view class="detail-card">
+        <view class="detail-card-title">{{detail.priceTitle}}</view>
+        <view class="price-box">
+          <text class="price-label">{{detail.priceLabel}}</text>
+          <text class="price-value">{{detail.priceValue}}</text>
+        </view>
+        <view wx:for="{{detail.priceParts}}" wx:key="text" class="price-line">· {{item.text}}</view>
+      </view>
+
+      <view class="detail-card warn-card">
+        <view class="detail-card-title warn-title">{{detail.warnTitle}}</view>
+        <view class="warn-text">{{detail.warnText}}</view>
+      </view>
+
+      <view class="primary-btn detail-consult-btn" bindtap="goChat">立即咨询 Agent</view>
     </block>
   </scroll-view>
-
 </view>

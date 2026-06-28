@@ -3,6 +3,7 @@
 
 import io
 from contextlib import contextmanager
+from urllib.parse import quote
 
 from services import context as ctx_service
 
@@ -159,6 +160,20 @@ def test_kb_detail_by_code(client):
     data = resp.get_json()
     assert data["id"] == "P0300"
     assert data["kind"] == "dtc"
+
+
+def test_kb_detail_allows_slash_in_item_id(client):
+    item_id = "咕噜咕噜 / 呼噜声 / 异响"
+    resp = client.get(f"/api/kb/symptom/{item_id}")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["id"] == item_id
+    assert data["kind"] == "symptom"
+
+    encoded = quote(item_id, safe="")
+    encoded_resp = client.get(f"/api/kb/symptom/{encoded}")
+    assert encoded_resp.status_code == 200
+    assert encoded_resp.get_json()["id"] == item_id
 
 
 def test_kb_unknown_kind_404(client):

@@ -217,7 +217,7 @@ def get_kb(kind):
     )
 
 
-@kb_bp.get("/api/kb/<kind>/<item_id>")
+@kb_bp.get("/api/kb/<kind>/<path:item_id>")
 def get_kb_detail(kind, item_id):
     items = normalized_kb(kind)
     if items is None:
