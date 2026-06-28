@@ -68,7 +68,7 @@ Page({
     chooseVehicleImage(this.data.label)
       .then((image) => {
         wx.setStorageSync('cxz_pending_image', image)
-        wx.switchTab({ url: '/pages/chat/chat' })
+        wx.navigateTo({ url: '/pages/chat/chat' })
       })
       .catch((err) => {
         if (!isChooseMediaCancel(err)) {
@@ -87,6 +87,6 @@ Page({
       wx.navigateBack()
       return
     }
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 })

@@ -60,7 +60,7 @@ Page({
   goChat() {
     const ask = this.data.code + ' 是什么意思？'
     wx.setStorageSync('cxz_pending_ask', ask)
-    wx.switchTab({ url: '/pages/chat/chat' })
+    wx.navigateTo({ url: '/pages/chat/chat' })
   },
 
   goBack() {
@@ -69,15 +69,15 @@ Page({
       wx.navigateBack()
       return
     }
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
   goHome() {
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
   goKb() {
-    wx.switchTab({ url: '/pages/kb/kb' })
+    wx.navigateTo({ url: '/pages/kb/kb' })
   },
   goProfile() {
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
 })

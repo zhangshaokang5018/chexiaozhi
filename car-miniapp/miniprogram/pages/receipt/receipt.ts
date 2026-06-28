@@ -85,18 +85,18 @@ Page({
       wx.navigateBack()
       return
     }
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
   goHome() {
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
   goChat() {
-    wx.switchTab({ url: '/pages/chat/chat' })
+    wx.navigateTo({ url: '/pages/chat/chat' })
   },
   goKb() {
-    wx.switchTab({ url: '/pages/kb/kb' })
+    wx.navigateTo({ url: '/pages/kb/kb' })
   },
   goProfile() {
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
 })

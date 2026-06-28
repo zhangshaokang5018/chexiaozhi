@@ -146,7 +146,7 @@ Page({
     const text = String(event.currentTarget.dataset.ask || '')
     if (!text) return
     wx.setStorageSync('cxz_pending_ask', text)
-    wx.switchTab({ url: '/pages/chat/chat' })
+    wx.navigateTo({ url: '/pages/chat/chat' })
   },
 
   goBack() {
@@ -155,18 +155,18 @@ Page({
       wx.navigateBack()
       return
     }
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 
   goHome() {
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 
   goChat() {
-    wx.switchTab({ url: '/pages/chat/chat' })
+    wx.navigateTo({ url: '/pages/chat/chat' })
   },
 
   goProfile() {
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
 })

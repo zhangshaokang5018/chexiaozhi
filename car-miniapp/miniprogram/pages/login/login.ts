@@ -65,6 +65,6 @@ Page({
       wx.navigateBack()
       return
     }
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
 })
