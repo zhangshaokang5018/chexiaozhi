@@ -7,6 +7,19 @@
 // - 真机预览：把 localhost 换成电脑的局域网 IP，例如 http://192.168.1.10:5000。
 export const BASE_URL = 'http://localhost:5000'
 
+// 统一用户标识：登录后由 B 写入 storage key `cxz_user_id`；未登录回退测试用户。
+// A 的 chat/context/receipt 只认 user_id（见 03 §10 / 06 §4）。
+export const DEFAULT_USER_ID = 'test_user_001'
+
+export function getUserId(): string {
+  try {
+    const uid = wx.getStorageSync('cxz_user_id')
+    return uid ? String(uid) : DEFAULT_USER_ID
+  } catch (e) {
+    return DEFAULT_USER_ID
+  }
+}
+
 interface RequestOptions {
   url: string
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -167,6 +180,54 @@ function buildQuery(query?: KbQuery): string {
 
 export function getKb(kind: KbKind, query?: KbQuery): Promise<KbResp> {
   return request<KbResp>({ url: `/api/kb/${kind}${buildQuery(query)}` })
+}
+
+// 知识库单条详情：GET /api/kb/<kind>/<item_id>，返回规范化 KbItem
+export function getKbDetail(kind: KbKind, itemId: string): Promise<KbItem> {
+  return request<KbItem>({ url: `/api/kb/${kind}/${encodeURIComponent(itemId)}` })
+}
+
+// 车辆上下文：GET /api/context?user_id=（VIN 已脱敏）
+export interface ContextResp {
+  car_model: string
+  vin: string
+  mileage: string
+  location: string
+  receipts: ReceiptItem[]
+}
+
+export function getContext(userId: string): Promise<ContextResp> {
+  return request<ContextResp>({
+    url: `/api/context?user_id=${encodeURIComponent(userId)}`,
+  })
+}
+
+// 维修记录存根：POST /api/receipt
+export interface ReceiptItem {
+  item: string
+  part_range: string
+  labor_range: string
+  avg: number
+}
+
+export interface ReceiptResp {
+  shop: string
+  shop_code: string
+  car_model: string
+  vin: string
+  location: string
+  created_at: string
+  items: ReceiptItem[]
+  total: number
+  simulated: boolean
+}
+
+export function getReceipt(userId: string): Promise<ReceiptResp> {
+  return request<ReceiptResp>({
+    url: '/api/receipt',
+    method: 'POST',
+    data: { user_id: userId },
+  })
 }
 
 // 语音转文字：上传录音文件到 /api/asr，返回识别文本

@@ -24,7 +24,7 @@
         <text class="emoji">🎙️</text>
         <text class="label">描述症状</text>
       </view>
-      <view class="mini-card" bindtap="goDetail">
+      <view class="mini-card" bindtap="goDetail" data-code="P0300">
         <text class="emoji">⚠️</text>
         <text class="label">故障码</text>
       </view>
@@ -39,10 +39,10 @@
     </view>
 
     <view class="card">
-      <view class="card-title">🚘 我的车辆 <text class="tag">丰田 卡罗拉</text></view>
+      <view class="card-title">🚘 我的车辆 <text class="tag">{{context.car_tag}}</text></view>
       <view class="vehicle-meta">
-        <text>里程 <text class="strong">38,500 km</text> · 所在地 <text class="strong">北京</text></text>
-        <text>VIN <text class="mono">LFMAP...3456</text></text>
+        <text>里程 <text class="strong">{{context.mileage}}</text> · 所在地 <text class="strong">{{context.location}}</text></text>
+        <text>VIN <text class="mono">{{context.vin}}</text></text>
       </view>
     </view>
 
@@ -77,20 +77,13 @@
     <view class="card">
       <view class="card-title">🔥 热门故障</view>
       <view class="hot-list">
-        <text class="hot-tag"><text class="rank">1</text>P0300 缺火</text>
-        <text class="hot-tag"><text class="rank">2</text>怠速抖动</text>
-        <text class="hot-tag"><text class="rank">3</text>刹车异响</text>
-        <text class="hot-tag"><text class="rank">4</text>机油报警</text>
-        <text class="hot-tag"><text class="rank">5</text>换挡顿挫</text>
-        <text class="hot-tag"><text class="rank">6</text>水温过高</text>
+        <text class="hot-tag" bindtap="goDetail" data-code="P0300"><text class="rank">1</text>P0300 缺火</text>
+        <text class="hot-tag" bindtap="goChat"><text class="rank">2</text>怠速抖动</text>
+        <text class="hot-tag" bindtap="goChat"><text class="rank">3</text>刹车异响</text>
+        <text class="hot-tag" bindtap="goChat"><text class="rank">4</text>机油报警</text>
+        <text class="hot-tag" bindtap="goChat"><text class="rank">5</text>换挡顿挫</text>
+        <text class="hot-tag" bindtap="goChat"><text class="rank">6</text>水温过高</text>
       </view>
     </view>
   </scroll-view>
-
-  <view class="tabbar">
-    <view class="tabbar-item active"><text class="tabbar-icon">🏠</text><text>首页</text></view>
-    <view class="tabbar-item" bindtap="goChat"><text class="tabbar-icon">💬</text><text>咨询</text></view>
-    <view class="tabbar-item" bindtap="goKb"><text class="tabbar-icon">📚</text><text>知识库</text></view>
-    <view class="tabbar-item" bindtap="goProfile"><text class="tabbar-icon">👤</text><text>我的</text></view>
-  </view>
 </view>

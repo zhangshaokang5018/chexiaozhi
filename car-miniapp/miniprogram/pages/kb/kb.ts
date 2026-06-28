@@ -12,15 +12,20 @@ const DEFAULT_TABS: TabItem[] = [
   { kind: 'symptom', label: '症状关联', count: 0 },
 ]
 
+// 每页条数（MVP 知识库数据量小，取较小值以演示「加载更多」分页）
+const PAGE_SIZE = 4
+
 Page({
   data: {
     activeTab: 'dtc' as KbKind,
     tabs: DEFAULT_TABS,
     items: [] as KbItem[],
     loading: true,
+    loadingMore: false,
     errorText: '',
     searchText: '',
     highOnly: false,
+    page: 1,
     total: 0,
     promptConfig:
       '你是一个专业的汽车维修翻译官。回答时先检索知识库；如果匹配到故障码或症状，请用专业、通俗、警示的口吻说明故障根源、预估费用区间和避坑建议。查不到时不要编造，应建议车主补充信息或寻求线下专业技师协助。',
@@ -59,13 +64,14 @@ Page({
     this.loadKb(this.data.activeTab)
   },
 
+  // 加载第一页（切 tab/搜索/刷新时调用，会重置列表）
   loadKb(kind: KbKind) {
-    this.setData({ loading: true, errorText: '' })
+    this.setData({ loading: true, errorText: '', page: 1 })
     getKb(kind, {
       q: this.data.searchText.trim(),
       level: this.data.highOnly ? 'high' : '',
       page: 1,
-      page_size: 50,
+      page_size: PAGE_SIZE,
     })
       .then((res: KbResp) => {
         this.setData({
@@ -73,6 +79,7 @@ Page({
           tabs: res.tabs && res.tabs.length ? res.tabs : this.data.tabs,
           items: res.items,
           total: res.total,
+          page: 1,
           loading: false,
           errorText: '',
         })
@@ -86,21 +93,54 @@ Page({
       })
   },
 
+  // A-T10：加载更多，追加下一页（不重置已加载列表）
+  loadMore() {
+    if (this.data.loadingMore || this.data.loading) return
+    if (this.data.items.length >= this.data.total) return
+    const nextPage = this.data.page + 1
+    this.setData({ loadingMore: true })
+    getKb(this.data.activeTab, {
+      q: this.data.searchText.trim(),
+      level: this.data.highOnly ? 'high' : '',
+      page: nextPage,
+      page_size: PAGE_SIZE,
+    })
+      .then((res: KbResp) => {
+        this.setData({
+          items: this.data.items.concat(res.items),
+          total: res.total,
+          page: nextPage,
+          loadingMore: false,
+        })
+      })
+      .catch((err) => {
+        console.error('load more kb failed', err)
+        this.setData({ loadingMore: false })
+        wx.showToast({ title: '加载更多失败', icon: 'none' })
+      })
+  },
+
   askItem(event: WechatMiniprogram.TouchEvent) {
     const text = String(event.currentTarget.dataset.ask || '')
     if (!text) return
-    wx.navigateTo({ url: `/pages/chat/chat?ask=${encodeURIComponent(text)}` })
+    // chat 已是 tab 页，switchTab 不支持带参，改用 storage 暂存，chat onShow 消费（A-T6）
+    try {
+      wx.setStorageSync('cxz_pending_ask', text)
+    } catch (e) {
+      console.error('store pending ask failed', e)
+    }
+    wx.switchTab({ url: '/pages/chat/chat' })
   },
 
   goHome() {
-    wx.navigateTo({ url: '/pages/index/index' })
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   goChat() {
-    wx.navigateTo({ url: '/pages/chat/chat' })
+    wx.switchTab({ url: '/pages/chat/chat' })
   },
 
   goProfile() {
-    wx.navigateTo({ url: '/pages/profile/profile' })
+    wx.switchTab({ url: '/pages/profile/profile' })
   },
 })

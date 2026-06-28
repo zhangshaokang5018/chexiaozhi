@@ -76,12 +76,14 @@
         <button class="ask-btn" data-ask="{{item.ask_text}}" bindtap="askItem">一键咨询</button>
       </view>
     </view>
-  </scroll-view>
 
-  <view class="tabbar">
-    <view class="tabbar-item" bindtap="goHome"><text class="tabbar-icon">🏠</text><text>首页</text></view>
-    <view class="tabbar-item" bindtap="goChat"><text class="tabbar-icon">💬</text><text>咨询</text></view>
-    <view class="tabbar-item active"><text class="tabbar-icon">📚</text><text>知识库</text></view>
-    <view class="tabbar-item" bindtap="goProfile"><text class="tabbar-icon">👤</text><text>我的</text></view>
-  </view>
+    <view wx:if="{{!loading && !errorText && items.length < total}}" class="load-more">
+      <button class="load-more-btn" bindtap="loadMore" disabled="{{loadingMore}}">
+        {{loadingMore ? '加载中...' : '加载更多'}}
+      </button>
+    </view>
+    <view wx:elif="{{!loading && !errorText && items.length > 0 && items.length >= total}}" class="load-more done">
+      已加载全部 {{total}} 条
+    </view>
+  </scroll-view>
 </view>

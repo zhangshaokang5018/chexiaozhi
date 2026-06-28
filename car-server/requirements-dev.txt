@@ -1,0 +1,4 @@
+# 测试依赖（开发人员 A 后端自动化测试用）。
+# 与主依赖 requirements.txt 分离，避免污染部署依赖。
+# 安装：.venv/Scripts/python -m pip install -r requirements-dev.txt
+pytest>=8.0

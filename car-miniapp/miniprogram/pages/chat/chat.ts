@@ -2,6 +2,8 @@ import {
   chat,
   ping,
   asr,
+  getContext,
+  getUserId,
   ChatAgentMeta,
   ChatPayload,
   ChatReply,
@@ -11,7 +13,6 @@ import {
 } from '../../utils/request'
 
 const LEGAL_NOTE = '所有建议仅供参考，请以当地授权维修点为准。'
-const USER_ID = 'test_user_001'
 const USE_MOCK = false
 const MOCK_MODE = 'success' as string
 
@@ -260,8 +261,52 @@ Page({
     },
   },
 
-  onLoad() {
+  onLoad(options: Record<string, string | undefined> = {}) {
+    this.loadContext()
+    // 兼容旧入口：若仍以 navigateTo?ask= 进入（非 tab 场景），onLoad 读取一次
+    const ask = options && options.ask ? decodeURIComponent(options.ask) : ''
     this.checkConnection()
+    if (ask) this.autoSend(ask)
+  },
+
+  onShow() {
+    // 从「我的/编辑车辆」返回时刷新顶部车辆卡片
+    this.loadContext()
+    // A-T6：知识库「一键咨询」经 storage 传入（switchTab 无法带参），在此消费
+    this.consumePendingAsk()
+  },
+
+  // A-T6：消费知识库一键咨询暂存的问题并自动发送一次
+  consumePendingAsk() {
+    let ask = ''
+    try {
+      ask = String(wx.getStorageSync('cxz_pending_ask') || '')
+      if (ask) wx.removeStorageSync('cxz_pending_ask')
+    } catch (e) {
+      ask = ''
+    }
+    if (ask) this.autoSend(ask)
+  },
+
+  // A-T5：顶部车辆卡片改为 /api/context 拉取，去掉写死
+  loadContext() {
+    if (USE_MOCK) return
+    getContext(getUserId())
+      .then((ctx) => {
+        if (ctx) {
+          this.setData({
+            context: {
+              car_model: ctx.car_model,
+              vin: ctx.vin,
+              mileage: ctx.mileage,
+              location: ctx.location,
+            },
+          })
+        }
+      })
+      .catch((err) => {
+        console.error('load context failed', err)
+      })
   },
 
   checkConnection() {
@@ -294,6 +339,14 @@ Page({
           pingResult: null,
         })
       })
+  },
+
+  // A-T6：自动发送一键咨询带入的问题
+  autoSend(text: string) {
+    const q = (text || '').trim()
+    if (!q || this.data.loadingAgent) return
+    this.setData({ inputText: '', canSend: false })
+    this.sendQuestion(q, 'text', '')
   },
 
   onInput(event: WechatMiniprogram.Input) {
@@ -387,7 +440,7 @@ Page({
     const userMessage = this.createUserMessage(text, imageLabel)
     const loadingMessage = this.createLoadingMessage()
     const payload: ChatPayload = {
-      user_id: USER_ID,
+      user_id: getUserId(),
       text,
       mode,
       image_label: imageLabel,
@@ -397,10 +450,10 @@ Page({
     this.setData({ loadingAgent: true })
 
     this.fetchChat(payload)
-      .then((resp) => {
+      .then((resp: ChatResp) => {
         this.replaceMessage(loadingMessage.id, this.createAgentMessage(loadingMessage.id, resp))
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error('chat failed', err)
         this.replaceMessage(loadingMessage.id, this.createAgentMessage(loadingMessage.id, mockError, true))
         wx.showToast({ title: '请求失败', icon: 'none' })
@@ -533,14 +586,14 @@ Page({
   noop() {},
 
   goHome() {
-    wx.navigateTo({ url: '/pages/index/index' })
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   goKb() {
-    wx.navigateTo({ url: '/pages/kb/kb' })
+    wx.switchTab({ url: '/pages/kb/kb' })
   },
 
   goProfile() {
-    wx.navigateTo({ url: '/pages/profile/profile' })
+    wx.switchTab({ url: '/pages/profile/profile' })
   },
 })
