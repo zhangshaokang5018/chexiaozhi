@@ -227,41 +227,59 @@
 .home-input-row {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  padding: 8rpx 10rpx;
+  gap: 8rpx;
+  min-height: 74rpx;
+  padding: 6rpx 8rpx;
   border: 1rpx solid #334155;
   border-radius: 999rpx;
   background: #0f172a;
+  box-sizing: border-box;
 }
 
-.round-btn {
+.input-icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 66rpx;
-  height: 66rpx;
+  flex-shrink: 0;
+  width: 58rpx;
+  height: 58rpx;
   margin: 0;
   padding: 0;
   border: 1rpx solid #334155;
   border-radius: 50%;
   background: #1e293b;
   color: #cbd5e1;
-  font-size: 28rpx;
+  font-size: 25rpx;
+  line-height: 1;
 }
 
-.round-btn.send {
+.camera-icon {
+  margin-right: -2rpx;
+}
+
+.input-icon-btn::after {
+  border: 0;
+}
+
+.mic-icon,
+.send-icon {
   border: 0;
   background: linear-gradient(135deg, #3b82f6, #f59e0b);
   color: #fff;
 }
 
-.round-btn::after {
-  border: 0;
+.mic-icon {
+  font-size: 27rpx;
+}
+
+.send-icon {
+  font-size: 24rpx;
 }
 
 .home-input {
   flex: 1;
-  min-height: 64rpx;
+  min-width: 0;
+  min-height: 58rpx;
   color: #f1f5f9;
   font-size: 24rpx;
 }
