@@ -7,9 +7,9 @@
 // - 真机预览：把 localhost 换成电脑的局域网 IP，例如 http://192.168.1.10:5000。
 export const BASE_URL = 'http://localhost:5000'
 
-// 统一用户标识：登录后由 B 写入 storage key `cxz_user_id`；未登录回退测试用户。
-// A 的 chat/context/receipt 只认 user_id（见 03 §10 / 06 §4）。
-export const DEFAULT_USER_ID = 'test_user_001'
+// 统一用户标识：登录后写入 storage key `cxz_user_id`；未登录回退到数据库种子用户。
+// chat/context/receipt 只认 user_id。
+export const DEFAULT_USER_ID = 'user_10001'
 
 export function getUserId(): string {
   try {
@@ -78,6 +78,12 @@ export interface ChatRoute {
   confidence: number
 }
 
+export interface SourceRef {
+  kind: string
+  item_id: string
+  title: string
+}
+
 export interface ChatAgentMeta {
   name: string
   desc: string
@@ -107,12 +113,14 @@ export interface ChatStep {
 }
 
 export interface ChatResp {
+  consultation_id?: string
   route: ChatRoute
   agent: ChatRoute['agent']
   agent_meta: ChatAgentMeta
   hit: boolean
   reply: ChatReply
   steps: ChatStep[]
+  sources?: SourceRef[]
   elapsed_ms: number
   legal_note: string
 }
@@ -122,6 +130,34 @@ export function chat(payload: ChatPayload): Promise<ChatResp> {
     url: '/api/chat',
     method: 'POST',
     data: payload,
+  })
+}
+
+export function chatImage(filePath: string, payload: ChatPayload): Promise<ChatResp> {
+  return new Promise<ChatResp>((resolve, reject) => {
+    wx.uploadFile({
+      url: `${BASE_URL}/api/chat/image`,
+      filePath,
+      name: 'file',
+      formData: {
+        user_id: payload.user_id,
+        text: payload.text,
+        mode: payload.mode,
+        image_label: payload.image_label,
+      },
+      success: (res) => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(res.data) as ChatResp)
+          } catch (e) {
+            reject(new Error('图片识别响应解析失败'))
+          }
+        } else {
+          reject(new Error(`HTTP ${res.statusCode}`))
+        }
+      },
+      fail: (err) => reject(err),
+    })
   })
 }
 
@@ -211,6 +247,7 @@ export interface ReceiptItem {
 }
 
 export interface ReceiptResp {
+  receipt_id?: string
   shop: string
   shop_code: string
   car_model: string
@@ -230,11 +267,27 @@ export function getReceipt(userId: string): Promise<ReceiptResp> {
   })
 }
 
+export interface ConsultationSnapshotPayload {
+  user_id: string
+  consultation_id: string
+  question: string
+  agent: ChatRoute['agent']
+  intent: string
+  reply_snapshot: ChatReply
+  sources: SourceRef[]
+}
+
+export interface RepairSnapshotPayload {
+  user_id: string
+  receipt_id: string
+  receipt_snapshot: ReceiptResp
+}
+
 // 语音转文字：上传录音文件到 /api/asr，返回识别文本
 export interface AsrResp {
   ok: boolean
   text: string
-  simulated: boolean // true=降级占位（未配置 Key 或识别失败）
+  simulated: boolean
   model: string
   error: string | null
 }

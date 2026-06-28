@@ -47,10 +47,22 @@ def test_chat_response_shape_and_normalization_invariant(client):
         assert resp.status_code == 200, payload
         data = resp.get_json()
         for key in ("route", "agent", "agent_meta", "hit", "reply", "steps",
-                    "elapsed_ms", "legal_note"):
+                    "sources", "consultation_id", "elapsed_ms", "legal_note"):
             assert key in data, (key, payload)
+        assert data["consultation_id"].startswith("c_")
+        assert isinstance(data["sources"], list), payload
         assert _valid_step_statuses(data["steps"]), payload
         assert _no_good_block(data["reply"]), payload
+
+
+def test_chat_dtc_returns_saveable_source(client):
+    resp = client.post("/api/chat", json={"text": "P0300 是什么意思", "user_id": "u_source"})
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["consultation_id"].startswith("c_")
+    assert data["sources"] == [
+        {"kind": "dtc", "item_id": "P0300", "title": "发动机缺火（随机/多缸）"}
+    ]
 
 
 def test_chat_fallback_always_runs(client):
@@ -86,6 +98,7 @@ def test_chat_quote_sinks_receipt(client):
     receipt = client.post("/api/receipt", json={"user_id": uid})
     assert receipt.status_code == 200
     rdata = receipt.get_json()
+    assert rdata["receipt_id"].startswith("r_")
     assert rdata["items"], "诊断后应有沉淀维修项"
     assert rdata["total"] > 0
 

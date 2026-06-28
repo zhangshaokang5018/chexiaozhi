@@ -1,4 +1,4 @@
-"""Intent scheduler for the A-side chat flow."""
+"""Intent scheduler for the chat flow."""
 
 import re
 from typing import Dict

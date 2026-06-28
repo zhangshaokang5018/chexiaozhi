@@ -119,7 +119,7 @@ export interface UserRepairItem {
   summary: string
   created_at: string
   total: number
-  receipt_snapshot?: Record<string, unknown>
+  receipt_snapshot?: object
 }
 
 export interface UserRepairs {
@@ -137,7 +137,7 @@ export interface SaveRepairPayload {
   title?: string
   summary?: string
   total?: number
-  receipt_snapshot: Record<string, unknown>
+  receipt_snapshot: object
   created_at?: string
 }
 
@@ -154,8 +154,8 @@ export interface UserConsultationItem {
   intent: string
   title: string
   summary: string
-  reply_snapshot: Record<string, unknown>
-  sources: Array<Record<string, unknown>>
+  reply_snapshot: object
+  sources: object[]
   created_at: string
 }
 
@@ -176,8 +176,8 @@ export interface SaveConsultationPayload {
   intent?: string
   title?: string
   summary?: string
-  reply_snapshot: Record<string, unknown>
-  sources?: Array<Record<string, unknown>>
+  reply_snapshot: object
+  sources?: object[]
   created_at?: string
 }
 

@@ -1,7 +1,7 @@
 <view class="screen">
   <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
   <view class="nav-bar">
-    <view class="nav-left"></view>
+    <view class="nav-left" bindtap="goHome">‹</view>
     <view class="nav-title">我的</view>
     <view class="nav-right" bindtap="goPrivacy">⚙️</view>
   </view>
@@ -15,7 +15,7 @@
     </view>
     <view wx:else>
       <view class="profile-head">
-        <view class="avatar">车</view>
+        <view class="avatar">👨‍🔧</view>
         <view class="profile-main">
           <input class="name-input" value="{{profile.nickname}}" data-field="nickname" bindinput="onFieldInput" placeholder="填写昵称" />
           <text class="sub">ID: {{profile.user_id}} · {{profile.profile_completed ? '资料已完善' : '待完善'}}</text>

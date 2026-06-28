@@ -1,4 +1,4 @@
-# agents/maintain.py —— 【B 角色】报价审核 / 保养建议 Agent（LangGraph 版）
+# agents/maintain.py —— 报价审核 / 保养建议 Agent（LangGraph 版）
 #
 # 职责（总文档 7.4）：
 #   1. 从用户文本匹配维修项目（查 kb_cost 维修成本知识库）
@@ -13,7 +13,7 @@
 #   若 langgraph 不可用（未安装/加载失败），handle 自动退回顺序调用，保证服务永远能跑。
 #
 # 对外契约（保持不变）：handle(text, context=None) -> dict
-#   返回 maintain Agent 负责的部分，供 A 的 routes/chat.py 在 maintain 分支直接合入响应：
+#   返回 maintain Agent 负责的部分，供 routes/chat.py 在 maintain 分支直接合入响应：
 #   {
 #     "agent": "maintain",
 #     "agent_meta": {...},
@@ -25,13 +25,13 @@
 #     "receipt_item": {...}       # 命中时附带，供 context.add_receipt_item 使用
 #   }
 #
-# 说明：本模块不依赖 Flask，可被直接 import 单测；A 不需要改本文件。
+# 说明：本模块不依赖 Flask，可被直接 import 单测。
 
 import re
 from typing import Optional, TypedDict
 
-from routes.kb import load_kb  # 复用知识库读取（B 同时维护 routes/kb.py）
-from services import rag  # RAG 语义检索（不可用时自动退回关键词）
+from routes.kb import load_kb  # 复用知识库读取
+from services import llm, rag  # RAG 语义检索（不可用时自动退回关键词）
 
 # 成本库语义检索的余弦距离阈值：超过则认为不相关，退回关键词匹配
 # （本地 bge-small-zh 距离较压缩，取 0.55）
@@ -222,7 +222,7 @@ def assess_node(state: MaintainState) -> dict:
         f"（零件 {part_low}-{part_high} + 工时 {labor_low}-{labor_high}）"
     )
 
-    # 供 A 的 chat.py 在诊断后调用 context.add_receipt_item(user_id, receipt_item)
+    # 供 chat.py 在诊断后调用 context.add_receipt_item(user_id, receipt_item)
     receipt_item = {
         "item": item["item"],
         "part_range": f"{part_low}-{part_high}",
@@ -245,6 +245,7 @@ def assess_node(state: MaintainState) -> dict:
                 "price_range": [total_low, total_high],
             },
             "steps": state.get("steps", _init_steps()),
+            "sources": [{"kind": "cost", "item_id": item["item"], "title": item["item"]}],
             "receipt_item": receipt_item,
         }
     }
@@ -309,7 +310,7 @@ def _handle_fallback(text: str, context=None) -> dict:
         state.update(clarify_node(state))
     else:
         state.update(assess_node(state))
-    return state["result"]
+    return llm.enhance_agent_result("maintain", text, context or {}, state["result"])
 
 
 def handle(text: str, context=None) -> dict:
@@ -322,4 +323,4 @@ def handle(text: str, context=None) -> dict:
         return _handle_fallback(text, context)
 
     final_state = graph.invoke({"text": text, "context": context})
-    return final_state["result"]
+    return llm.enhance_agent_result("maintain", text, context, final_state["result"])

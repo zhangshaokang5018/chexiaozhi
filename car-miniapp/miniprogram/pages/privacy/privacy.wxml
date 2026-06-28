@@ -34,7 +34,7 @@
         <view class="row">
           <view>
             <text class="row-title">诊断数据改进</text>
-            <text class="row-copy">仅保存开关状态，A 的诊断链路不在此页处理。</text>
+            <text class="row-copy">仅保存开关状态，不影响当前诊断流程。</text>
           </view>
           <switch checked="{{privacy.share_diagnosis_for_improvement}}" data-field="share_diagnosis_for_improvement" bindchange="onSwitch" color="#0f766e" />
         </view>

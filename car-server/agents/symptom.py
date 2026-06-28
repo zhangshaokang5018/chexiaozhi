@@ -1,6 +1,6 @@
-# agents/symptom.py —— 【A 角色】症状分析 Agent
+# agents/symptom.py —— 症状分析 Agent
 #
-# 职责（总文档 7 / 05 A-T4）：
+# 职责：
 #   1. 从用户口语症状描述匹配 kb_symptom 知识库（异响/抖动/报警/水温等）
 #   2. 命中：给出可能故障(fault)、紧急程度(level 高/中/低)、排查建议(tip)、价格区间
 #      level=="高" 时必须输出红色 danger 强提醒（高风险场景）
@@ -12,7 +12,7 @@
 # 说明：本模块不依赖 Flask，可被直接 import 单测。RAG 不可用时自动退回关键词。
 
 from routes.kb import load_kb
-from services import rag
+from services import llm, rag
 
 _SYMPTOM_RAG_MAX_DISTANCE = 0.55
 
@@ -94,6 +94,7 @@ def _build_hit(item: dict, steps: list, confidence: float) -> dict:
             "price_range": [total_low, total_high],
         },
         "steps": steps,
+        "sources": [{"kind": "symptom", "item_id": title_kw, "title": fault}],
         "receipt_item": receipt_item,
     }
 
@@ -127,12 +128,14 @@ def handle(text: str, context=None) -> dict:
     # 1) 关键词精确匹配
     item = _match_by_keyword(text, symptom_kb)
     if item is not None:
-        return _build_hit(item, _init_steps("关键词命中"), 0.86)
+        result = _build_hit(item, _init_steps("关键词命中"), 0.86)
+        return llm.enhance_agent_result("symptom", text, context or {}, result)
 
     # 2) RAG 语义检索
     hits = rag.search("symptom", text, top_k=1, max_distance=_SYMPTOM_RAG_MAX_DISTANCE) or []
     if hits:
-        return _build_hit(hits[0]["item"], _init_steps("RAG 语义命中"), 0.78)
+        result = _build_hit(hits[0]["item"], _init_steps("RAG 语义命中"), 0.78)
+        return llm.enhance_agent_result("symptom", text, context or {}, result)
 
     # 3) 未命中：澄清
     steps = _init_steps("未命中")

@@ -1,147 +1,261 @@
+.home-screen {
+  padding-bottom: 220rpx;
+}
+
 .home-content {
-  height: calc(100vh - 88rpx - 78rpx - 128rpx);
+  height: calc(100vh - 88rpx - 78rpx - 220rpx);
 }
 
-.banner {
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 26rpx;
-  padding: 36rpx;
-  border-radius: 32rpx;
-  background: linear-gradient(135deg, #1e40af, #3b82f6 60%, #f59e0b);
-  color: #fff;
+.menu-trigger {
+  font-size: 42rpx;
+  font-weight: 900;
 }
 
-.banner-copy {
-  position: relative;
-  z-index: 1;
+.hero {
   display: flex;
-  flex-direction: column;
-  gap: 8rpx;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24rpx;
+  padding: 8rpx 4rpx 26rpx;
 }
 
-.banner-title {
-  font-size: 36rpx;
-  font-weight: 800;
+.hero-copy {
+  flex: 1;
+  min-width: 0;
 }
 
-.banner-desc {
-  font-size: 24rpx;
-  opacity: .86;
-}
-
-.banner-car {
-  position: absolute;
-  right: 18rpx;
-  bottom: 0;
-  font-size: 130rpx;
-  opacity: .2;
-}
-
-.grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18rpx;
-  margin-bottom: 26rpx;
-}
-
-.mini-card {
-  min-height: 132rpx;
-  padding: 20rpx 10rpx;
-  border: 1rpx solid #334155;
-  border-radius: 24rpx;
-  background: #1e293b;
-  text-align: center;
-}
-
-.mini-card .emoji {
+.hero-title {
   display: block;
-  margin-bottom: 10rpx;
-  font-size: 48rpx;
+  color: #f8fafc;
+  font-size: 44rpx;
+  font-weight: 900;
+  line-height: 1.18;
+  letter-spacing: 0;
 }
 
-.mini-card .label {
-  color: #cbd5e1;
-  font-size: 22rpx;
-}
-
-.vehicle-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
+.hero-desc {
+  display: block;
+  margin-top: 12rpx;
   color: #94a3b8;
-  font-size: 24rpx;
-  line-height: 1.6;
+  font-size: 25rpx;
+  line-height: 1.5;
 }
 
-.strong,
-.mono {
-  color: #e2e8f0;
-}
-
-.mono {
-  font-family: monospace;
-}
-
-.quick-item {
+.hero-mascot {
   display: flex;
   align-items: center;
-  margin-bottom: 14rpx;
-  padding: 22rpx;
+  justify-content: center;
+  width: 170rpx;
+  height: 170rpx;
   border: 1rpx solid #334155;
-  border-radius: 22rpx;
+  border-radius: 44rpx;
   background: #0f172a;
+  box-shadow: 0 18rpx 46rpx rgba(59, 130, 246, .28);
 }
 
-.quick-item:last-child {
-  margin-bottom: 0;
+.hero-mascot text {
+  font-size: 78rpx;
 }
 
-.quick-emoji {
-  width: 72rpx;
-  text-align: center;
-  font-size: 42rpx;
+.diagnosis-card,
+.vehicle-card {
+  margin-bottom: 18rpx;
+  padding: 24rpx 26rpx;
+  border: 1rpx solid #334155;
+  border-radius: 26rpx;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  box-sizing: border-box;
 }
 
-.quick-info {
-  flex: 1;
+.diagnosis-head,
+.vehicle-title {
   display: flex;
-  flex-direction: column;
-  gap: 4rpx;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
 }
 
-.quick-title {
-  color: #f1f5f9;
-  font-size: 26rpx;
-  font-weight: 700;
-}
-
-.quick-desc {
-  color: #94a3b8;
-  font-size: 22rpx;
-}
-
-.quick-arrow {
-  color: #64748b;
+.diagnosis-icon {
+  color: #f59e0b;
   font-size: 34rpx;
 }
 
-.hot-list {
+.diagnosis-title,
+.vehicle-title text:first-child {
+  color: #f1f5f9;
+  font-size: 27rpx;
+  font-weight: 900;
+}
+
+.diagnosis-main,
+.diagnosis-sub {
+  display: block;
+}
+
+.diagnosis-main {
+  color: #e2e8f0;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.diagnosis-sub {
+  margin-top: 8rpx;
+  color: #94a3b8;
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.vehicle-title {
+  justify-content: space-between;
+}
+
+.vehicle-badge {
+  max-width: 220rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 16rpx;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 21rpx;
+}
+
+.vehicle-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 9rpx 0;
+  color: #94a3b8;
+  font-size: 23rpx;
+  line-height: 1.45;
+}
+
+.vehicle-row text:first-child {
+  flex-shrink: 0;
+}
+
+.vehicle-row text:last-child {
+  color: #f1f5f9;
+  font-weight: 700;
+  text-align: right;
+  word-break: break-all;
+}
+
+.section-title {
+  margin: 28rpx 0 18rpx;
+  color: #f8fafc;
+  font-size: 31rpx;
+  font-weight: 900;
+}
+
+.hot-questions {
   display: flex;
   flex-wrap: wrap;
   gap: 14rpx;
 }
 
-.hot-tag {
-  padding: 12rpx 18rpx;
-  border-radius: 28rpx;
-  background: #334155;
+.hot-question {
+  display: inline-flex;
+  align-items: center;
+  gap: 14rpx;
+  max-width: 100%;
+  padding: 18rpx 22rpx;
+  border: 1rpx solid #334155;
+  border-radius: 22rpx;
+  background: #1e293b;
+  color: #cbd5e1;
+  font-size: 26rpx;
+  box-sizing: border-box;
+}
+
+.hot-question text:first-child {
+  color: #f59e0b;
+  font-weight: 900;
+}
+
+.hot-question view {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.hot-question .arr {
+  color: #64748b;
+}
+
+.home-space {
+  height: 28rpx;
+}
+
+.home-input-wrap {
+  position: fixed;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: calc(18rpx + env(safe-area-inset-bottom));
+  z-index: 20;
+  padding: 16rpx;
+  border: 1rpx solid #334155;
+  border-radius: 30rpx;
+  background: rgba(30, 41, 59, .96);
+  box-sizing: border-box;
+  backdrop-filter: blur(20rpx);
+}
+
+.home-quick-tabs {
+  width: 100%;
+  margin-bottom: 14rpx;
+  white-space: nowrap;
+}
+
+.qt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-right: 12rpx;
+  padding: 11rpx 18rpx;
+  border: 1rpx solid #334155;
+  border-radius: 999rpx;
+  background: #0f172a;
   color: #cbd5e1;
   font-size: 22rpx;
 }
 
-.rank {
-  margin-right: 4rpx;
-  color: #f59e0b;
-  font-weight: 700;
+.home-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 8rpx 10rpx;
+  border: 1rpx solid #334155;
+  border-radius: 999rpx;
+  background: #0f172a;
+}
+
+.round-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 66rpx;
+  height: 66rpx;
+  margin: 0;
+  padding: 0;
+  border: 1rpx solid #334155;
+  border-radius: 50%;
+  background: #1e293b;
+  color: #cbd5e1;
+  font-size: 28rpx;
+}
+
+.round-btn.send {
+  border: 0;
+  background: linear-gradient(135deg, #3b82f6, #f59e0b);
+  color: #fff;
+}
+
+.round-btn::after {
+  border: 0;
+}
+
+.home-input {
+  flex: 1;
+  min-height: 64rpx;
+  color: #f1f5f9;
+  font-size: 24rpx;
 }

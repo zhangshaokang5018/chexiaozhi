@@ -11,6 +11,10 @@
 #     blocks.type==good）规范成前端已支持的值，避免前端改动。
 
 from copy import deepcopy
+from datetime import datetime
+import hashlib
+import os
+import tempfile
 from time import perf_counter
 
 from flask import Blueprint, jsonify, request
@@ -18,6 +22,7 @@ from flask import Blueprint, jsonify, request
 from agents import dtc, maintain, part, symptom
 from agents.scheduler import route
 from services import context as ctx_service
+from services import llm
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -44,6 +49,30 @@ AGENT_META = {
 _VALID_STEP_STATUS = {"done", "doing", "pending", "todo"}
 
 
+def _stable_id(prefix: str, *parts: object) -> str:
+    """生成可重复、足够稳定的记录 ID，供 B 侧按 ID 幂等保存。"""
+    raw = "|".join(str(p or "") for p in parts)
+    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:12]
+    day = datetime.now().strftime("%Y%m%d")
+    return f"{prefix}_{day}_{digest}"
+
+
+def _clean_sources(sources) -> list:
+    """只透传 B 保存需要的来源字段，避免把 Agent 内部结构塞给前端。"""
+    if not isinstance(sources, list):
+        return []
+    cleaned = []
+    for item in sources:
+        if not isinstance(item, dict):
+            continue
+        kind = str(item.get("kind", "") or "").strip()
+        item_id = str(item.get("item_id", "") or "").strip()
+        title = str(item.get("title", "") or "").strip()
+        if kind and item_id:
+            cleaned.append({"kind": kind, "item_id": item_id, "title": title})
+    return cleaned
+
+
 def build_steps(agent_name: str, intent: str, confidence: float):
     confidence_text = f"{round(confidence * 100)}%"
     return [
@@ -55,11 +84,11 @@ def build_steps(agent_name: str, intent: str, confidence: float):
 
 
 def build_reply(agent: str, text: str, image_label: str):
-    """占位/兜底文案：仅在 scheduler 兜底或智能体异常时使用。"""
+    """Clear fallback message used only when a real model/agent cannot answer."""
     if agent == "scheduler":
         return {
             "title": "需要补充信息",
-            "summary": "我还需要更具体的车辆症状、故障码、报价项目或图片类型。",
+            "summary": "我还需要更具体的车辆症状、故障码、报价项目或图片类型，或当前未能调用大模型。",
             "blocks": [
                 {"type": "kv", "label": "可补充", "value": "车型、里程、故障灯、异响位置、报价项目或故障码。"},
                 {"type": "warn", "text": "你可以直接输入 P0300、咕噜咕噜响、800 元换机油机滤合理吗，或点击拍报价单。"},
@@ -112,67 +141,144 @@ def _normalize_agent_result(result: dict) -> dict:
     return result
 
 
-@chat_bp.post("/api/chat")
-def chat():
+def _response_payload(
+    started_at: float,
+    user_id: str,
+    text: str,
+    mode: str,
+    image_label: str,
+    route_result: dict,
+    result: dict,
+) -> dict:
+    agent = str(result.get("agent") or route_result["agent"])
+    intent = str(result.get("intent") or route_result["intent"])
+    confidence = float(result.get("confidence", route_result["confidence"]))
+    hit = bool(result.get("hit", agent != "scheduler"))
+    receipt_item = result.get("receipt_item")
+    if hit and isinstance(receipt_item, dict):
+        ctx_service.add_receipt_item(user_id, receipt_item)
+
+    consultation_id = _stable_id("c", user_id, text, mode, image_label, agent, intent)
+    return {
+        "consultation_id": consultation_id,
+        "route": {"agent": agent, "intent": intent, "confidence": confidence},
+        "agent": agent,
+        "agent_meta": result.get("agent_meta") or AGENT_META.get(agent, AGENT_META["scheduler"]),
+        "hit": hit,
+        "reply": result.get("reply") or build_reply(agent, text, image_label),
+        "steps": result.get("steps") or build_steps(AGENT_META.get(agent, AGENT_META["scheduler"])["name"], intent, confidence),
+        "sources": _clean_sources(result.get("sources")) if hit else [],
+        "elapsed_ms": int((perf_counter() - started_at) * 1000),
+        "legal_note": LEGAL_NOTE,
+    }
+
+
+def _general_llm_result(text: str, context: dict) -> dict | None:
+    reply = llm.generate_general_vehicle_reply(text, context)
+    if not reply:
+        return None
+    return {
+        "agent": "scheduler",
+        "agent_meta": AGENT_META["scheduler"],
+        "intent": "通用汽车问答",
+        "confidence": 0.72,
+        "hit": True,
+        "reply": reply,
+        "steps": [
+            {"name": "意图识别", "status": "done", "detail": "通用汽车问答（72%）"},
+            {"name": "分发至 通用大模型", "status": "done"},
+            {"name": "DashScope 文本模型", "status": "done", "detail": llm.TEXT_MODEL},
+            {"name": "合成回复", "status": "done"},
+        ],
+        "sources": [{"kind": "model", "item_id": llm.TEXT_MODEL, "title": "DashScope 文本大模型"}],
+        "model": llm.TEXT_MODEL,
+    }
+
+
+def _run_chat(payload: dict, image_path: str = ""):
     started_at = perf_counter()
-    data = request.get_json(silent=True) or {}
-    text = str(data.get("text", "") or "").strip()
-    mode = str(data.get("mode", "text") or "text").strip()
-    image_label = str(data.get("image_label", "") or "").strip()
-    user_id = str(data.get("user_id", "") or "").strip() or DEFAULT_USER_ID
+    text = str(payload.get("text", "") or "").strip()
+    mode = str(payload.get("mode", "text") or "text").strip()
+    image_label = str(payload.get("image_label", "") or "").strip()
+    user_id = str(payload.get("user_id", "") or "").strip() or DEFAULT_USER_ID
 
     route_result = route(text=text, mode=mode, image_label=image_label)
     agent = str(route_result["agent"])
     intent = str(route_result["intent"])
     confidence = float(route_result["confidence"])
 
+    agent_context = ctx_service.get_raw_context(user_id)
+    agent_context["image_label"] = image_label
+    agent_context["image_path"] = image_path
+    agent_context["mode"] = mode
+
     handler = AGENT_HANDLERS.get(agent)
     if handler is not None:
         try:
-            # 车辆上下文（A-T5）：get_raw_context 返回深拷贝，可安全注入运行参数
-            agent_context = ctx_service.get_raw_context(user_id)
-            agent_context["image_label"] = image_label
-            agent_context["mode"] = mode
-
             result = _normalize_agent_result(handler(text, agent_context))
-
-            # 用智能体真实返回覆盖占位
-            reply = result.get("reply") or build_reply(agent, text, image_label)
-            steps = result.get("steps") or build_steps(AGENT_META[agent]["name"], intent, confidence)
-            hit = bool(result.get("hit", agent != "scheduler"))
-            agent_meta = result.get("agent_meta") or AGENT_META.get(agent, AGENT_META["scheduler"])
-            confidence = float(result.get("confidence", confidence))
-            intent = str(result.get("intent", intent))
-
-            # 命中且带 receipt_item → 沉淀到 context（A-T5）
-            receipt_item = result.get("receipt_item")
-            if hit and isinstance(receipt_item, dict):
-                ctx_service.add_receipt_item(user_id, receipt_item)
-
-            elapsed_ms = int((perf_counter() - started_at) * 1000)
-            return jsonify({
-                "route": {"agent": agent, "intent": intent, "confidence": confidence},
+            return jsonify(_response_payload(started_at, user_id, text, mode, image_label, route_result, result))
+        except Exception as exc:
+            result = {
                 "agent": agent,
-                "agent_meta": agent_meta,
-                "hit": hit,
-                "reply": reply,
-                "steps": steps,
-                "elapsed_ms": elapsed_ms,
-                "legal_note": LEGAL_NOTE,
-            })
-        except Exception as exc:  # 智能体异常 → 回退占位，保证永远能跑
-            print(f"[chat] agent={agent} handle 异常，回退占位: {exc}")
+                "agent_meta": AGENT_META.get(agent, AGENT_META["scheduler"]),
+                "intent": intent,
+                "confidence": confidence,
+                "hit": False,
+                "reply": build_reply(agent, text, image_label),
+                "steps": build_steps(AGENT_META.get(agent, AGENT_META["scheduler"])["name"], intent, confidence),
+                "sources": [],
+                "error": str(exc),
+            }
+            return jsonify(_response_payload(started_at, user_id, text, mode, image_label, route_result, result))
 
-    # scheduler 兜底 / 智能体异常回退
-    agent_meta = AGENT_META.get(agent, AGENT_META["scheduler"])
-    elapsed_ms = int((perf_counter() - started_at) * 1000)
-    return jsonify({
-        "route": route_result,
+    result = _general_llm_result(text, agent_context)
+    if result is not None:
+        return jsonify(_response_payload(started_at, user_id, text, mode, image_label, route_result, result))
+
+    result = {
         "agent": agent,
-        "agent_meta": agent_meta,
+        "agent_meta": AGENT_META.get(agent, AGENT_META["scheduler"]),
+        "intent": intent,
+        "confidence": confidence,
         "hit": False,
         "reply": build_reply(agent, text, image_label),
-        "steps": build_steps(agent_meta["name"], intent, confidence),
-        "elapsed_ms": elapsed_ms,
-        "legal_note": LEGAL_NOTE,
-    })
+        "steps": build_steps(AGENT_META.get(agent, AGENT_META["scheduler"])["name"], intent, confidence),
+        "sources": [],
+    }
+    return jsonify(_response_payload(started_at, user_id, text, mode, image_label, route_result, result))
+
+
+@chat_bp.post("/api/chat")
+def chat():
+    data = request.get_json(silent=True) or {}
+    return _run_chat(data)
+
+
+@chat_bp.post("/api/chat/image")
+def chat_image():
+    file = request.files.get("file")
+    if file is None or not file.filename:
+        return jsonify({"ok": False, "error": "未收到图片文件（字段名应为 file）"}), 400
+
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}:
+        ext = ".jpg"
+
+    tmp_path = None
+    try:
+        fd, tmp_path = tempfile.mkstemp(suffix=ext)
+        os.close(fd)
+        file.save(tmp_path)
+        payload = {
+            "user_id": request.form.get("user_id", DEFAULT_USER_ID),
+            "text": request.form.get("text", ""),
+            "mode": "image",
+            "image_label": request.form.get("image_label", ""),
+        }
+        return _run_chat(payload, image_path=tmp_path)
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass

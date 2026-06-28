@@ -1,6 +1,6 @@
 """B user-system tests.
 
-These tests use a tiny in-memory DB double so they verify B-owned routes and
+These tests use a tiny in-memory DB double so they verify user routes and
 service logic without requiring a local MySQL server.
 """
 
@@ -344,7 +344,7 @@ def test_save_consultation_is_idempotent_and_updates_stats_once(user_client):
     assert item["sources"][0]["item_id"] == "P0300"
 
 
-def test_user_schema_contains_six_tables_and_demo_records():
+def test_user_schema_contains_model_key_table_and_demo_records():
     schema = (_SERVER_ROOT / "sql" / "user_schema.sql").read_text(encoding="utf-8")
     for table in (
         "users",
@@ -353,8 +353,10 @@ def test_user_schema_contains_six_tables_and_demo_records():
         "user_stats",
         "user_repairs",
         "user_consultations",
+        "model_api_keys",
     ):
         assert f"CREATE TABLE IF NOT EXISTS {table}" in schema
+    assert "DASHSCOPE_API_KEY" not in schema
     assert "c_demo_001" in schema
     assert "r_demo_001" in schema
 

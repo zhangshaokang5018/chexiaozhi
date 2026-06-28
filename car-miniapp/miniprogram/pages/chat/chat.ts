@@ -1,5 +1,6 @@
 import {
   chat,
+  chatImage,
   ping,
   asr,
   getContext,
@@ -11,6 +12,8 @@ import {
   ChatStep,
   PingResult,
 } from '../../utils/request'
+import { saveConsultation as saveUserConsultation } from '../../utils/user-api'
+import { chooseVehicleImage, isChooseMediaCancel } from '../../utils/media'
 
 const LEGAL_NOTE = '所有建议仅供参考，请以当地授权维修点为准。'
 const USE_MOCK = false
@@ -174,6 +177,7 @@ type Message = {
   type: MessageType
   text?: string
   imageLabel?: string
+  imagePath?: string
   route?: {
     agent: ChatResp['agent']
     intent: string
@@ -193,7 +197,7 @@ const welcomeMessage: Message = {
   agentMeta: { name: '系统', desc: '汽车维修翻译官' },
   reply: {
     title: '欢迎使用汽车维修翻译官',
-    summary: '你可以描述症状、输入故障码、咨询报价，也可以用图片模式模拟识别报价单。',
+    summary: '你可以描述症状、输入故障码、咨询报价，也可以拍照识别报价单、零件或仪表盘。',
     blocks: [
       { type: 'kv', label: '我能做', value: '故障码解读 / 症状分析 / 零件识别 / 报价审核' },
       { type: 'warn', text: LEGAL_NOTE },
@@ -257,10 +261,11 @@ Page({
     canSend: false,
     recording: false,
     transcribing: false,
+    voiceStartAt: 0,
     useMock: USE_MOCK,
     context: {
       car_model: '2022款 丰田 卡罗拉 1.2T 豪华版',
-      vin: 'LFMAP22CXXX123456',
+      vin: 'LFMA*********3456',
       mileage: '38,500 km',
       location: '北京',
     },
@@ -296,8 +301,9 @@ Page({
   onShow() {
     // 从「我的/编辑车辆」返回时刷新顶部车辆卡片
     this.loadContext()
-    // A-T6：知识库「一键咨询」经 storage 传入（switchTab 无法带参），在此消费
+    // 兼容知识库通过 storage 暂存的一键咨询问题。
     this.consumePendingAsk()
+    this.consumePendingImage()
   },
 
   // A-T6：消费知识库一键咨询暂存的问题并自动发送一次
@@ -310,6 +316,22 @@ Page({
       ask = ''
     }
     if (ask) this.autoSend(ask)
+  },
+
+  consumePendingImage() {
+    if (this.data.loadingAgent) return
+    let image: { label?: string; tempFilePath?: string } | null = null
+    try {
+      image = wx.getStorageSync('cxz_pending_image') || null
+      if (image) wx.removeStorageSync('cxz_pending_image')
+    } catch (e) {
+      image = null
+    }
+    const label = String((image && image.label) || '').trim()
+    const tempFilePath = String((image && image.tempFilePath) || '').trim()
+    if (label && tempFilePath) {
+      this.sendQuestion(`已选择${label}图片`, 'image', label, tempFilePath)
+    }
   },
 
   // A-T5：顶部车辆卡片改为 /api/context 拉取，去掉写死
@@ -390,21 +412,43 @@ Page({
     const mode = event.currentTarget.dataset.mode === 'image' ? 'image' : 'text'
     const imageLabel = String(event.currentTarget.dataset.imageLabel || '')
     if (!text || this.data.loadingAgent) return
+    if (mode === 'image') {
+      this.chooseAndSendImage(imageLabel || text)
+      return
+    }
     this.sendQuestion(text, mode, imageLabel)
   },
 
   uploadImage(event: WechatMiniprogram.TouchEvent) {
     const imageLabel = String(event.currentTarget.dataset.imageLabel || '报价单')
-    this.sendQuestion('拍报价单', 'image', imageLabel)
+    this.chooseAndSendImage(imageLabel)
   },
 
-  // ===== 语音转文字：点一下开始录音，再点一下结束并上传转写 =====
+  chooseAndSendImage(imageLabel: string) {
+    if (this.data.loadingAgent) return
+    chooseVehicleImage(imageLabel)
+      .then((image) => {
+        this.sendQuestion(`已选择${image.label}图片`, 'image', image.label, image.tempFilePath)
+      })
+      .catch((err) => {
+        if (!isChooseMediaCancel(err)) {
+          console.error('choose image failed', err)
+          wx.showToast({ title: '选择图片失败', icon: 'none' })
+        }
+      })
+  },
+
+  // ===== 语音转文字：按住开始录音，松开发送转写 =====
   ensureRecorder() {
     const self = this as any
     if (self._recorder) return self._recorder
     const rm = wx.getRecorderManager()
     rm.onStop((res) => {
       this.setData({ recording: false })
+      if (self._skipNextVoiceUpload) {
+        self._skipNextVoiceUpload = false
+        return
+      }
       if (res && res.tempFilePath) {
         this.uploadVoice(res.tempFilePath)
       }
@@ -417,15 +461,13 @@ Page({
     return rm
   },
 
-  toggleRecord() {
+  startRecord() {
     if (this.data.transcribing || this.data.loadingAgent) return
     const rm = this.ensureRecorder()
-    if (this.data.recording) {
-      rm.stop()
-      return
-    }
-    // 开始录音（mp3，16k 单声道，符合 paraformer 识别要求）
-    this.setData({ recording: true })
+    if (this.data.recording) return
+    const self = this as any
+    self._skipNextVoiceUpload = false
+    this.setData({ recording: true, voiceStartAt: Date.now() })
     rm.start({
       format: 'mp3',
       duration: 60000,
@@ -433,6 +475,30 @@ Page({
       numberOfChannels: 1,
       encodeBitRate: 48000,
     })
+  },
+
+  finishRecord() {
+    if (!this.data.recording) return
+    const duration = Date.now() - Number(this.data.voiceStartAt || 0)
+    const rm = this.ensureRecorder()
+    if (duration < 500) {
+      const self = this as any
+      self._skipNextVoiceUpload = true
+      rm.stop()
+      wx.showToast({ title: '说话时间太短', icon: 'none' })
+      return
+    }
+    rm.stop()
+  },
+
+  cancelRecord() {
+    if (!this.data.recording) return
+    const rm = this.ensureRecorder()
+    const self = this as any
+    self._skipNextVoiceUpload = true
+    rm.stop()
+    this.setData({ recording: false, voiceStartAt: 0 })
+    wx.showToast({ title: '已取消录音', icon: 'none' })
   },
 
   uploadVoice(filePath: string) {
@@ -446,10 +512,7 @@ Page({
         }
         // 回填到输入框，用户可编辑后再发送
         this.setData({ inputText: text, canSend: text.trim().length > 0 })
-        wx.showToast({
-          title: res.simulated ? '已转写(语音示例)' : '已转写',
-          icon: 'none',
-        })
+        wx.showToast({ title: '已转写', icon: 'none' })
       })
       .catch((err) => {
         console.error('asr failed', err)
@@ -460,8 +523,8 @@ Page({
       })
   },
 
-  sendQuestion(text: string, mode: ChatPayload['mode'], imageLabel: string) {
-    const userMessage = this.createUserMessage(text, imageLabel)
+  sendQuestion(text: string, mode: ChatPayload['mode'], imageLabel: string, imagePath = '') {
+    const userMessage = this.createUserMessage(text, imageLabel, imagePath)
     const loadingMessage = this.createLoadingMessage()
     const payload: ChatPayload = {
       user_id: getUserId(),
@@ -473,9 +536,10 @@ Page({
     this.appendMessages([userMessage, loadingMessage])
     this.setData({ loadingAgent: true })
 
-    this.fetchChat(payload)
+    this.fetchChat(payload, imagePath)
       .then((resp: ChatResp) => {
         this.replaceMessage(loadingMessage.id, this.createAgentMessage(loadingMessage.id, resp))
+        this.saveConsultation(payload, resp)
       })
       .catch((err: unknown) => {
         console.error('chat failed', err)
@@ -487,8 +551,27 @@ Page({
       })
   },
 
-  fetchChat(payload: ChatPayload): Promise<ChatResp> {
-    if (!USE_MOCK) return chat(payload)
+  // 咨询记录快照非阻塞保存；MySQL 不可用时不影响当前对话展示。
+  saveConsultation(payload: ChatPayload, resp: ChatResp) {
+    if (!resp.consultation_id) return
+    const snapshot = {
+      user_id: payload.user_id,
+      consultation_id: resp.consultation_id,
+      question: payload.text,
+      agent: resp.agent,
+      intent: resp.route.intent,
+      reply_snapshot: resp.reply,
+      sources: resp.sources || [],
+    }
+    saveUserConsultation(snapshot).catch((err) => {
+      console.warn('save consultation failed', err)
+    })
+  },
+
+  fetchChat(payload: ChatPayload, imagePath = ''): Promise<ChatResp> {
+    if (!USE_MOCK) {
+      return payload.mode === 'image' && imagePath ? chatImage(imagePath, payload) : chat(payload)
+    }
 
     return new Promise((resolve, reject) => {
       setTimeout(() => {
@@ -507,25 +590,26 @@ Page({
       resp.route = { agent: 'part', intent: '图像识别/零件匹配', confidence: 0.9 }
       resp.agent = 'part'
       resp.agent_meta = { name: '零件识别 Agent', desc: '图像/名称匹配' }
-      resp.reply.title = '图片识别模拟'
+      resp.reply.title = '图片识别'
       resp.reply.summary = `已按图片模式识别：${payload.image_label || payload.text}`
       resp.reply.blocks = [
         { type: 'kv', label: '图片标签', value: payload.image_label || '报价单' },
-        { type: 'kv', label: '识别结果', value: 'MVP 阶段为模拟识别，用于演示零件/报价单链路。' },
+        { type: 'kv', label: '识别结果', value: 'Mock 模式示例，真实模式会上传图片并调用视觉大模型。' },
         { type: 'warn', text: '避坑：维修前要求店家展示配件包装、型号与旧件。' },
       ]
-      resp.reply.price_text = '模拟识别结果，价格需结合报价单明细确认'
+      resp.reply.price_text = '价格需结合报价单明细确认'
       resp.reply.price_range = []
     }
     return resp
   },
 
-  createUserMessage(text: string, imageLabel: string): Message {
+  createUserMessage(text: string, imageLabel: string, imagePath = ''): Message {
     return {
       id: nextMessageId('user'),
       type: 'user',
       text,
       imageLabel,
+      imagePath,
     }
   },
 
@@ -610,14 +694,24 @@ Page({
   noop() {},
 
   goHome() {
-    wx.switchTab({ url: '/pages/index/index' })
+    const pages = getCurrentPages()
+    if (pages.length > 1) {
+      wx.navigateBack()
+      return
+    }
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 
   goKb() {
-    wx.switchTab({ url: '/pages/kb/kb' })
+    wx.navigateTo({ url: '/pages/kb/kb' })
+  },
+
+  goCamera(event: WechatMiniprogram.TouchEvent) {
+    const label = String(event.currentTarget.dataset.label || '报价单')
+    wx.navigateTo({ url: '/pages/camera/camera?label=' + encodeURIComponent(label) })
   },
 
   goProfile() {
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
 })

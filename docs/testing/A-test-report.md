@@ -2,9 +2,9 @@
 
 测试对象：car-server A 链路（对话调度 /api/chat + 四个诊断 Agent + 知识库/上下文/维修存根/ASR）
 测试分支：codex/ab-development-docs（A-T1~A-T10 已完成）
-测试时间：2026-06-27
+测试时间：2026-06-28
 测试人/AI：开发 A（AI 辅助）
-测试方式：pytest + Flask `app.test_client()` 全链路 + Agent 直接 import 单测，**不依赖 MySQL、不依赖联网**
+测试方式：pytest + Flask `app.test_client()` 全链路 + Agent 直接 import 单测，前端 `npm run typecheck`；A 主业务**不依赖 MySQL、不依赖联网**
 
 ## 测试范围
 
@@ -14,6 +14,9 @@
 - `routes/kb.py`：知识库分页、`/api/kb/dtc/{code}` 详情、非法 kind 404（A-T10）
 - `routes/context.py` + `services/context.py`：VIN 脱敏、GET/POST 上下文回环
 - `routes/receipt.py` + `services/receipt.py`：诊断沉淀生成核销单
+- `routes/chat.py`：返回 `consultation_id` 与 `sources[]`，供咨询记录保存
+- `services/receipt.py`：返回稳定 `receipt_id`，供维修记录保存
+- `routes/user.py` + `services/user.py`：记录接口（consultations/repairs）已接 MySQL；A 测试验证主链路不被数据库影响
 - `routes/asr.py` + `services/asr.py`：无 Key 降级转写
 - `routes/health.py`：`/api/ping`
 
@@ -32,8 +35,17 @@ cd car-server
 
 ## 测试结果汇总
 
-**32 passed**（首次运行即全绿，未发现需修复的代码缺陷）。耗时约 80s，主要为
+**34 passed**（本轮新增记录元数据断言后全绿，未发现需修复的后端缺陷）。耗时约 116s，主要为
 sentence-transformers 嵌入模型加载（RAG 实际可用路径）。
+
+前端类型检查：
+
+```bash
+cd car-miniapp
+npm run typecheck
+```
+
+结果：通过（`tsc --noEmit` 无错误）。
 
 | 用例编号 | 功能 | 结果 | 备注 |
 | --- | --- | --- | --- |
@@ -47,9 +59,11 @@ sentence-transformers 嵌入模型加载（RAG 实际可用路径）。
 | I-004 | maintain 报价审核命中 | ✅ 通过 | “800 换机油机滤” → hit、price_range=[400,700]、含报价评估 |
 | A-005/I-005 | part 图片模拟 | ✅ 通过 | image_label=报价单 → 结构化核对项 + “需核对实物”，价格留空 |
 | A-002/A-008 | /api/chat 外形 + 归一化不变量 | ✅ 通过 | 6 类输入响应字段齐全；steps.status∈{done,doing,pending,todo}；无 good 块 |
+| A-T11 | /api/chat 记录元数据 | ✅ 通过 | 响应含 `consultation_id` 与 `sources[]`；DTC 命中返回 dtc 来源 |
 | A-2 单测 | `_normalize_agent_result` | ✅ 通过 | miss→pending（保留 detail）；good→kv 且 good=true |
 | 兜底 | /api/chat 永远能跑 | ✅ 通过 | 无意义输入 → scheduler、hit=false、200 且 reply 非空 |
 | A-T5/I-006 | user_id + receipt 沉淀 | ✅ 通过 | 报价诊断后 /api/receipt 的 items 非空、total>0 |
+| A-T11 | /api/receipt 记录元数据 | ✅ 通过 | 响应含稳定 `receipt_id` |
 | I-008 | 合规免责声明 | ✅ 通过 | legal_note 含“仅供参考” |
 | I-001 | /api/ping | ✅ 通过 | ok=true、name=chexiaozhi-server |
 | B-006 类 | VIN 脱敏 | ✅ 通过 | get_context 脱敏、get_raw_context 不脱敏，头尾保留 |
@@ -63,16 +77,17 @@ sentence-transformers 嵌入模型加载（RAG 实际可用路径）。
 
 ## 修复说明
 
-本轮无需修改 A 的源码（`agents/*`、`routes/*`、`services/*` 未改动）。仅新增测试相关文件：
-- `car-server/tests/`（conftest + 4 个测试模块）
-- `car-server/requirements-dev.txt`（pytest，独立于主依赖）
-- `car-server/pytest.ini`
+本轮修改包括：
+- A 主链路：`routes/chat.py`、`agents/dtc.py`、`agents/symptom.py`、`agents/maintain.py`、`services/receipt.py`
+- B 记录联调：`routes/user.py`、`services/user.py`、`sql/user_schema.sql`
+- 小程序页面：首页、咨询、知识库、我的、咨询记录、维修存根
+- 测试：`tests/test_chat_route.py` 增加记录元数据断言
 
 ## 未覆盖项（需人工核对，不在本轮自动化范围）
 
-前端小程序页面（A-001~A-013 的 UI 渲染：欢迎语/上下文卡片/气泡/快捷问题/loading/error/
-空输入禁发等）依赖**微信开发者工具**运行，无法无头自动化。建议用开发者工具打开
-`car-miniapp` 按 `docs/testing/A-agent-chat-test-plan.md` 清单手动回归一次。
+前端小程序页面（A-001~A-023 的 UI 渲染、参考图视觉还原、真实路由跳转、固定输入栏遮挡检查）依赖**微信开发者工具**运行，无法无头自动化。建议用开发者工具打开 `car-miniapp` 按 `docs/testing/A-agent-chat-test-plan.md` 清单手动回归一次。
+
+数据库联调依赖本机 MySQL。若本机未完成 MySQL 安装，DB-001~DB-006 暂记为环境未就绪；但 A 的 `/api/chat`、`/api/kb`、`/api/receipt`、`/api/asr` 自动化已通过。
 
 ## 结论
 

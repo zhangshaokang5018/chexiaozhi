@@ -7,7 +7,7 @@ page {
 
 .screen {
   min-height: 100vh;
-  padding-bottom: 148rpx;
+  padding-bottom: env(safe-area-inset-bottom);
   background: #0f172a;
   box-sizing: border-box;
 }
@@ -87,39 +87,6 @@ page {
   color: #fff;
   font-size: 20rpx;
   font-weight: 500;
-}
-
-.tabbar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
-  display: flex;
-  height: 128rpx;
-  padding-bottom: env(safe-area-inset-bottom);
-  background: rgba(30, 41, 59, .96);
-  border-top: 1rpx solid #334155;
-  backdrop-filter: blur(20rpx);
-}
-
-.tabbar-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6rpx;
-  color: #64748b;
-  font-size: 22rpx;
-}
-
-.tabbar-icon {
-  font-size: 38rpx;
-}
-
-.tabbar-item.active {
-  color: #60a5fa;
 }
 
 .primary-btn {

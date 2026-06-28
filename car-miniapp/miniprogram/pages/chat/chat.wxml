@@ -6,21 +6,27 @@
 
   <view class="nav-bar">
     <view class="nav-left" bindtap="goHome">‹</view>
-    <view class="nav-title">汽车维修翻译官</view>
-    <view class="nav-right">⋯</view>
+    <view class="nav-title">车小智</view>
+    <view class="nav-right" bindtap="goKb">📚</view>
   </view>
 
   <scroll-view class="chat-content" scroll-y enhanced scroll-into-view="{{scrollIntoView}}" scroll-with-animation>
-    <view class="connection {{connected ? 'connection-ok' : 'connection-warn'}}" bindtap="checkConnection">
-      <text wx:if="{{loading}}">服务检测中...</text>
-      <text wx:elif="{{connected}}">服务已连接 · {{pingResult.version}}</text>
-      <text wx:else>{{statusText}}</text>
+    <view class="ai-disclaimer">⚠️ 回答内容由 AI 生成，仅供参考</view>
+
+    <view class="chat-hero" bindtap="openContext">
+      <view class="hero-avatar">🚗</view>
+      <view class="hero-info">
+        <text class="hero-title">车况解读伙伴在线</text>
+        <text class="hero-desc">{{context.car_model || '未设置车型'}} · {{connected ? '服务已连接' : statusText}}</text>
+      </view>
+      <view class="hero-tag">{{context.location || '车辆资料'}}</view>
     </view>
 
     <block wx:for="{{messages}}" wx:key="id">
       <view wx:if="{{item.type == 'user'}}" class="msg user" id="msg-{{item.id}}">
-        <view class="bubble">
-          <view wx:if="{{item.imageLabel}}" class="bubble-img">图片模式：{{item.imageLabel}}</view>
+        <view class="bubble user-bubble">
+          <image wx:if="{{item.imagePath}}" class="bubble-photo" src="{{item.imagePath}}" mode="aspectFill" />
+          <view wx:if="{{item.imageLabel}}" class="bubble-img">图片：{{item.imageLabel}}</view>
           <view>{{item.text}}</view>
         </view>
       </view>
@@ -29,55 +35,66 @@
         <view class="agent-label" wx:if="{{item.agentMeta}}">
           <text class="dot">●</text>{{item.agentMeta.name}}<text wx:if="{{item.agentMeta.desc}}"> · {{item.agentMeta.desc}}</text>
         </view>
-        <view class="bubble">
-          <view wx:if="{{item.steps && item.steps.length}}" class="steps">
+        <view class="bubble bot-bubble">
+          <view class="route" wx:if="{{item.route}}">识别意图：<text>{{item.route.intent}}</text>（{{item.route.confidenceText}}）</view>
+          <view class="t" wx:if="{{item.reply.title}}">{{item.reply.title}}</view>
+          <view class="summary" wx:if="{{item.reply.summary}}">{{item.reply.summary}}</view>
+          <block wx:if="{{item.reply.blocks}}">
+            <view wx:for="{{item.reply.blocks}}" wx:for-item="b" wx:key="label" class="kv {{b.type == 'danger' ? 'danger-block' : ''}}">
+              <view wx:if="{{b.type == 'warn'}}" class="warn">⚠️ {{b.text}}</view>
+              <view wx:elif="{{b.type == 'danger'}}" class="danger-text">🚨 {{b.text || b.value}}</view>
+              <view wx:else>
+                <text class="kv-label">◆ {{b.label}}：</text>
+                <text class="{{b.danger ? 'red' : b.good ? 'green' : ''}}">{{b.value}}</text>
+              </view>
+            </view>
+          </block>
+          <view class="price" wx:if="{{item.reply.price_text}}">维修价格参考：{{item.reply.price_text}}</view>
+          <view class="steps" wx:if="{{item.steps && item.steps.length}}">
             <text wx:for="{{item.steps}}" wx:for-item="s" wx:key="name" class="step">
               {{s.status == 'done' ? '✓' : s.status == 'doing' ? '→' : '○'}} {{s.name}}
             </text>
           </view>
-          <view wx:if="{{item.route}}" class="route">识别意图：<text>{{item.route.intent}}</text>（{{item.route.confidenceText}}）</view>
-          <view class="t" wx:if="{{item.reply.title}}">{{item.reply.title}}</view>
-          <block wx:if="{{item.reply.blocks}}">
-            <view wx:for="{{item.reply.blocks}}" wx:for-item="b" wx:key="label" class="kv {{b.type == 'danger' ? 'danger-block' : ''}}">
-              <view wx:if="{{b.type == 'warn'}}" class="warn">{{b.text}}</view>
-              <view wx:else>
-                <text class="kv-label">{{b.label}}：</text>
-                <text class="{{b.type == 'danger' || b.danger ? 'red' : b.good ? 'green' : ''}}">{{b.value}}</text>
-              </view>
-            </view>
-          </block>
-          <view class="price" wx:if="{{item.reply.price_text}}">{{item.reply.price_text}}</view>
           <view class="legal" wx:if="{{item.legal_note}}">{{item.legal_note}}</view>
         </view>
       </view>
     </block>
 
-    <view wx:if="{{loadingAgent}}" class="typing">AI 正在思考...</view>
+    <view wx:if="{{loadingAgent}}" class="typing">正在调用 Agent 分析...</view>
     <view class="chat-space"></view>
   </scroll-view>
 
   <view class="chat-input-bar">
     <scroll-view class="chips" scroll-x enhanced show-scrollbar="{{false}}">
-      <text class="chip" bindtap="quickAsk" data-text="咕噜咕噜响">症状：咕噜咕噜响</text>
-      <text class="chip" bindtap="quickAsk" data-text="P0300 是什么意思">故障码：P0300</text>
-      <text class="chip" bindtap="quickAsk" data-text="800 元换机油机滤合理吗">报价：机油机滤</text>
-      <text class="chip" bindtap="quickAsk" data-text="拍报价单" data-mode="image" data-image-label="报价单">图片：拍报价单</text>
+      <text class="chip" bindtap="goCamera" data-label="仪表盘">💡 拍故障灯</text>
+      <text class="chip" bindtap="goCamera" data-label="报价单">📋 拍维修单</text>
+      <text class="chip" bindtap="quickAsk" data-text="P0300 是什么意思">⚠️ 故障码</text>
+      <text class="chip" bindtap="goKb">🔧 维修指南</text>
+      <text class="chip" bindtap="showReceipt">🧾 存根</text>
     </scroll-view>
     <view class="chat-input-row">
       <button
         class="voice {{recording ? 'recording' : ''}}"
-        bindtap="toggleRecord"
+        bindtouchstart="startRecord"
+        bindtouchend="finishRecord"
+        bindtouchcancel="cancelRecord"
         disabled="{{transcribing || loadingAgent}}"
-      >{{recording ? '停止' : (transcribing ? '识别中' : '🎤')}}</button>
+      >{{recording ? '按住中' : (transcribing ? '识别中' : '按住说')}}</button>
+      <button
+        class="camera-btn"
+        bindtap="goCamera"
+        data-label="报价单"
+        disabled="{{loadingAgent}}"
+      >📷</button>
       <textarea
         class="input"
         value="{{inputText}}"
-        placeholder="{{recording ? '正在录音，点停止结束...' : '描述你的车辆问题...'}}"
+        placeholder="{{recording ? '松手转文字...' : '继续提问，或拍照/语音输入~ ✨'}}"
         auto-height
         bindinput="onInput"
         maxlength="500"
       />
-      <button class="send" bindtap="send" disabled="{{!canSend || loadingAgent}}">发送</button>
+      <button class="send" bindtap="send" disabled="{{!canSend || loadingAgent}}">➤</button>
     </view>
   </view>
 </view>

@@ -1,57 +1,39 @@
 <view class="screen kb-screen">
   <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
   <view class="nav-bar">
-    <view class="nav-left"></view>
-    <view class="nav-title">维修知识库</view>
+    <view class="nav-left" bindtap="goBack">‹</view>
+    <view class="nav-title">车小智</view>
     <view class="nav-right" bindtap="refreshKb">刷新</view>
   </view>
 
   <scroll-view class="content kb-content" scroll-y enhanced>
     <view class="kb-hero">
-      <view>
-        <view class="hero-title">知识库</view>
-        <view class="hero-sub">最小数据集 · 高频故障码 / 维修成本 / 症状关联</view>
-      </view>
-      <view class="hero-count">{{total}} 条</view>
+      <view class="hero-title">保养维修指南</view>
+      <view class="hero-sub">修车前花10秒查一下，心里有底不花冤枉钱。</view>
     </view>
 
-    <view class="panel prompt-panel">
-      <view class="panel-title">Prompt 人设配置</view>
-      <view class="prompt-area">{{promptConfig}}</view>
-      <view class="small-label">用于约束回答口吻：专业、通俗、警示，不命中时不编造。</view>
+    <view class="search-panel">
+      <input
+        class="search-input"
+        value="{{searchText}}"
+        placeholder="搜索关键词（如：P0300、刹车异响）"
+        confirm-type="search"
+        bindinput="onSearchInput"
+        bindconfirm="searchKb"
+      />
+      <button class="search-btn" bindtap="searchKb">🔍</button>
     </view>
 
-    <view class="panel">
-      <view class="panel-title">知识库检索</view>
-      <view class="search-row">
-        <input
-          class="search-input"
-          value="{{searchText}}"
-          placeholder="搜索 P0300、机油、刹车片、咕噜..."
-          confirm-type="search"
-          bindinput="onSearchInput"
-          bindconfirm="searchKb"
-        />
-        <button class="search-btn" bindtap="searchKb">搜索</button>
-      </view>
-      <view class="filter-row">
-        <view class="filter {{highOnly ? 'active' : ''}}" bindtap="toggleHighOnly">高风险</view>
-        <view class="filter" bindtap="clearSearch">清空</view>
-      </view>
-    </view>
-
-    <view class="kb-tabs">
-      <view
-        wx:for="{{tabs}}"
-        wx:key="kind"
-        class="kb-tab {{activeTab == item.kind ? 'active' : ''}}"
-        data-tab="{{item.kind}}"
-        bindtap="switchTab"
-      >
-        <text>{{item.label}}</text>
-        <text class="tab-count">{{item.count}}</text>
-      </view>
-    </view>
+    <scroll-view class="filter-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <text class="filter {{activeTab == 'dtc' && searchText == '' ? 'active' : ''}}" data-tab="dtc" bindtap="switchTab">故障码</text>
+      <text class="filter {{activeTab == 'symptom' && searchText == '' ? 'active' : ''}}" data-tab="symptom" bindtap="switchTab">症状</text>
+      <text class="filter {{activeTab == 'cost' && searchText == '' ? 'active' : ''}}" data-tab="cost" bindtap="switchTab">维修价格</text>
+      <text class="filter {{searchText == 'P0420' ? 'active' : ''}}" data-kind="dtc" data-keyword="P0420" bindtap="quickSearch">P0420</text>
+      <text class="filter {{searchText == '刹车异响' ? 'active' : ''}}" data-kind="symptom" data-keyword="刹车异响" bindtap="quickSearch">刹车异响</text>
+      <text class="filter {{searchText == '保养周期' ? 'active' : ''}}" data-kind="cost" data-keyword="保养周期" bindtap="quickSearch">保养周期</text>
+      <text class="filter {{searchText == '刹车片' ? 'active' : ''}}" data-kind="cost" data-keyword="刹车片" bindtap="quickSearch">换刹车片多少钱</text>
+      <text class="filter {{highOnly ? 'active danger' : ''}}" bindtap="toggleHighOnly">高风险</text>
+    </scroll-view>
 
     <view wx:if="{{loading}}" class="state">知识库加载中...</view>
     <view wx:elif="{{errorText}}" class="state error">{{errorText}}</view>
@@ -60,20 +42,17 @@
     <view wx:else class="kb-list">
       <view wx:for="{{items}}" wx:key="id" class="kb-item {{item.kind}} {{item.level_class}}">
         <view class="kb-head">
-          <view>
-            <text class="code">{{item.title}}</text>
-            <text class="kind-badge">{{item.subtitle}}</text>
-          </view>
-          <view class="level">{{item.level_text}}<text wx:if="{{item.stars}}" class="stars"> {{item.stars}}</text></view>
+          <text class="kb-title">{{item.title}}</text>
+          <text class="kb-kind">{{item.kind}}</text>
         </view>
-        <view class="summary">{{item.summary}}</view>
-        <view class="detail">{{item.detail}}</view>
-        <view class="price" wx:if="{{item.price_text}}">{{item.price_text}}</view>
-        <view class="tip" wx:if="{{item.tip}}">{{item.tip}}</view>
-        <view class="tags" wx:if="{{item.tags && item.tags.length}}">
-          <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="tag">{{tag}}</text>
+        <view class="kb-summary">{{item.summary}}</view>
+        <view class="kb-detail">{{item.detail}}</view>
+        <view class="kb-meta">
+          <text wx:if="{{item.price_text}}">💰 {{item.price_text}}</text>
+          <text wx:if="{{item.level_text}}">👁 {{item.level_text}}</text>
         </view>
-        <button class="ask-btn" data-ask="{{item.ask_text}}" bindtap="askItem">一键咨询</button>
+        <view class="kb-tip" wx:if="{{item.tip}}">{{item.tip}}</view>
+        <button class="ask-btn" data-ask="{{item.ask_text}}" bindtap="askItem">一键咨询 Agent</button>
       </view>
     </view>
 

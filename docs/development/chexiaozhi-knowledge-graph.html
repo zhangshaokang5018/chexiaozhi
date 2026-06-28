@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>车小智知识图谱</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif;
+      color: #132337;
+      background: linear-gradient(135deg, #eef7ff 0%, #f7fbff 48%, #eefaf6 100%);
+      letter-spacing: 0;
+    }
+
+    .slide {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      padding: 58px 72px;
+    }
+
+    .title {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 40px;
+      margin-bottom: 36px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 54px;
+      line-height: 1.12;
+      font-weight: 900;
+      color: #10253f;
+    }
+
+    .sub {
+      margin-top: 14px;
+      font-size: 24px;
+      line-height: 1.45;
+      color: #53677d;
+      font-weight: 650;
+    }
+
+    .tag {
+      min-width: 330px;
+      padding: 18px 22px;
+      border-radius: 18px;
+      background: #10253f;
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 800;
+      text-align: center;
+      box-shadow: 0 18px 40px rgba(16, 37, 63, 0.20);
+    }
+
+    .board {
+      position: relative;
+      width: 1776px;
+      height: 835px;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(151, 176, 199, 0.38);
+      box-shadow: 0 30px 80px rgba(44, 83, 113, 0.16);
+      overflow: hidden;
+    }
+
+    .links {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .node {
+      position: absolute;
+      z-index: 2;
+      border-radius: 22px;
+      padding: 22px 24px;
+      background: #ffffff;
+      border: 1px solid rgba(151, 176, 199, 0.40);
+      box-shadow: 0 18px 38px rgba(44, 83, 113, 0.14);
+    }
+
+    .node.primary {
+      color: #ffffff;
+      background: linear-gradient(135deg, #1263f1, #18b7c8);
+      border: none;
+      box-shadow: 0 22px 48px rgba(18, 99, 241, 0.24);
+    }
+
+    .node.dark {
+      color: #ffffff;
+      background: #10253f;
+      border: none;
+    }
+
+    .n-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 13px;
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .icon {
+      display: inline-grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      color: #ffffff;
+      background: #1263f1;
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .primary .icon,
+    .dark .icon {
+      color: #10253f;
+      background: #ffffff;
+    }
+
+    .bullets {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      font-size: 21px;
+      line-height: 1.32;
+      color: #51677f;
+      font-weight: 700;
+    }
+
+    .primary .bullets,
+    .dark .bullets {
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .bullets li {
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .bullets li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #18b7c8;
+    }
+
+    .primary .bullets li::before,
+    .dark .bullets li::before {
+      background: #7ff5d2;
+    }
+
+    .frontend {
+      left: 54px;
+      top: 80px;
+      width: 360px;
+      height: 238px;
+    }
+
+    .api {
+      left: 498px;
+      top: 80px;
+      width: 370px;
+      height: 238px;
+    }
+
+    .agent {
+      left: 952px;
+      top: 80px;
+      width: 390px;
+      height: 238px;
+    }
+
+    .rag {
+      left: 1426px;
+      top: 80px;
+      width: 300px;
+      height: 238px;
+    }
+
+    .model {
+      left: 268px;
+      top: 420px;
+      width: 420px;
+      height: 230px;
+    }
+
+    .data {
+      left: 816px;
+      top: 420px;
+      width: 420px;
+      height: 230px;
+    }
+
+    .output {
+      left: 1364px;
+      top: 420px;
+      width: 330px;
+      height: 230px;
+    }
+
+    .caption {
+      position: absolute;
+      left: 54px;
+      right: 54px;
+      bottom: 40px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 22px 28px;
+      border-radius: 22px;
+      background: #eff8ff;
+      border: 1px solid rgba(151, 176, 199, 0.42);
+      color: #40576e;
+      font-size: 22px;
+      line-height: 1.36;
+      font-weight: 750;
+    }
+
+    .caption strong {
+      color: #10253f;
+      font-weight: 900;
+    }
+
+    .legend {
+      display: flex;
+      gap: 18px;
+      white-space: nowrap;
+      font-size: 19px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #1263f1;
+    }
+
+    .dot.green {
+      background: #18b87d;
+    }
+
+    .dot.orange {
+      background: #ffb642;
+    }
+
+    .line {
+      fill: none;
+      stroke: #49a8d8;
+      stroke-width: 5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .line.green {
+      stroke: #18b87d;
+    }
+
+    .line.orange {
+      stroke: #ffb642;
+    }
+
+    .arrow-text {
+      font-size: 20px;
+      font-weight: 900;
+      fill: #2e6f93;
+    }
+
+    .soft-label {
+      position: absolute;
+      z-index: 2;
+      padding: 8px 13px;
+      border-radius: 999px;
+      color: #2e6f93;
+      background: #e9f7ff;
+      border: 1px solid rgba(73, 168, 216, 0.32);
+      font-size: 18px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .l1 { left: 420px; top: 177px; }
+    .l2 { left: 874px; top: 177px; }
+    .l3 { left: 1348px; top: 177px; }
+    .l4 { left: 688px; top: 514px; color: #157b55; background: #ebfff7; border-color: rgba(24, 184, 125, 0.32); }
+    .l5 { left: 1237px; top: 514px; color: #9b670b; background: #fff8e8; border-color: rgba(255, 182, 66, 0.38); }
+  </style>
+</head>
+<body>
+  <main class="slide">
+    <header class="title">
+      <div>
+        <h1>车小智核心知识图谱</h1>
+        <div class="sub">一图讲清：前端怎么调后端，后端怎么调智能体，智能体怎么查 RAG 知识库，最后如何生成可追溯的诊断与维修记录。</div>
+      </div>
+      <div class="tag">PPT 讲解版 · 简洁链路</div>
+    </header>
+
+    <section class="board">
+      <svg class="links" viewBox="0 0 1776 835" aria-hidden="true">
+        <defs>
+          <marker id="arrow-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#49a8d8"></path>
+          </marker>
+          <marker id="arrow-green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#18b87d"></path>
+          </marker>
+          <marker id="arrow-orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffb642"></path>
+          </marker>
+        </defs>
+
+        <path class="line" marker-end="url(#arrow-blue)" d="M 414 199 L 498 199"></path>
+        <path class="line" marker-end="url(#arrow-blue)" d="M 868 199 L 952 199"></path>
+        <path class="line" marker-end="url(#arrow-blue)" d="M 1342 199 L 1426 199"></path>
+
+        <path class="line green" marker-end="url(#arrow-green)" d="M 772 420 C 742 366, 728 336, 705 318"></path>
+        <path class="line green" marker-end="url(#arrow-green)" d="M 688 535 L 816 535"></path>
+
+        <path class="line orange" marker-end="url(#arrow-orange)" d="M 1236 535 L 1364 535"></path>
+        <path class="line orange" marker-end="url(#arrow-orange)" d="M 1515 318 C 1508 356, 1500 384, 1492 420"></path>
+      </svg>
+
+      <div class="soft-label l1">wx.request / uploadFile</div>
+      <div class="soft-label l2">意图路由</div>
+      <div class="soft-label l3">检索证据</div>
+      <div class="soft-label l4">模型增强</div>
+      <div class="soft-label l5">结果沉淀</div>
+
+      <div class="node frontend">
+        <div class="n-title"><span class="icon">端</span>前端入口</div>
+        <ul class="bullets">
+          <li>微信小程序页面</li>
+          <li>文字咨询、拍照上传、语音输入</li>
+          <li>知识库、我的、维修存根</li>
+        </ul>
+      </div>
+
+      <div class="node api">
+        <div class="n-title"><span class="icon">服</span>后端服务</div>
+        <ul class="bullets">
+          <li>Flask API 网关</li>
+          <li>/api/chat、/api/asr、/api/kb</li>
+          <li>/api/context、/api/user、/api/receipt</li>
+        </ul>
+      </div>
+
+      <div class="node primary agent">
+        <div class="n-title"><span class="icon">智</span>智能体中枢</div>
+        <ul class="bullets">
+          <li>Scheduler 统一调度</li>
+          <li>DTC / 症状 / 保养报价 / 零件识别</li>
+          <li>按意图分发，输出结构化结论</li>
+        </ul>
+      </div>
+
+      <div class="node rag">
+        <div class="n-title"><span class="icon">库</span>RAG 知识库</div>
+        <ul class="bullets">
+          <li>BGE 向量化</li>
+          <li>Chroma 本地检索</li>
+          <li>DTC / 成本 / 症状三库</li>
+        </ul>
+      </div>
+
+      <div class="node model">
+        <div class="n-title"><span class="icon">模</span>多模态模型</div>
+        <ul class="bullets">
+          <li>Qwen-Plus：诊断结论润色合成</li>
+          <li>Qwen-VL：图片/报价单/零件识别</li>
+          <li>Paraformer：语音转文字</li>
+        </ul>
+      </div>
+
+      <div class="node dark data">
+        <div class="n-title"><span class="icon">数</span>业务数据</div>
+        <ul class="bullets">
+          <li>MySQL：用户、车辆、隐私、统计</li>
+          <li>咨询记录与维修记录幂等保存</li>
+          <li>模型 Key 存库，前端不暴露密钥</li>
+        </ul>
+      </div>
+
+      <div class="node output">
+        <div class="n-title"><span class="icon">出</span>最终输出</div>
+        <ul class="bullets">
+          <li>诊断卡片</li>
+          <li>知识来源 sources</li>
+          <li>维修存根与历史记录</li>
+        </ul>
+      </div>
+
+      <div class="caption">
+        <div><strong>讲解主线：</strong>用户在小程序输入问题，Flask 接口接入请求，Scheduler 分发到对应 Agent，Agent 调用 RAG 知识库和多模态模型生成可追溯结论，最终沉淀到 MySQL 形成用户历史资产。</div>
+        <div class="legend">
+          <span><i class="dot"></i>主调用</span>
+          <span><i class="dot green"></i>模型能力</span>
+          <span><i class="dot orange"></i>数据闭环</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

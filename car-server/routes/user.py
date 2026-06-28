@@ -1,4 +1,4 @@
-"""B-owned user-system HTTP routes."""
+"""User-system HTTP routes backed by MySQL."""
 
 from __future__ import annotations
 

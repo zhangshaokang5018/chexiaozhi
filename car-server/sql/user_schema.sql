@@ -1,13 +1,12 @@
 -- =============================================================
--- 车小智 · 用户体系数据库 schema（B 负责）
+-- 车小智 · 用户体系数据库 schema
 -- =============================================================
--- 用途：存放 B 用户体系（登录 / 资料 / 隐私 / 车辆 / 统计）的数据。
--- A 的主业务（chat / kb / context / receipt / agents / rag）不使用本库，
--- 也不依赖 MySQL；本库只服务 /api/user/*。
+-- 用途：存放用户体系（登录 / 资料 / 隐私 / 车辆 / 统计）的数据。
+-- /api/user/* 通过 MySQL 读写本库；/api/context 优先读取 user_vehicle 作为诊断上下文。
 --
 -- 初始化方式（任选其一，详见 car-server/README.md「用户体系数据库」一节）：
 --   1) 命令行：  mysql -u root -p < sql/user_schema.sql
---   2) 脚本：    .venv\Scripts\python -m services.user_init   （由 B 实现，可选）
+--   2) 脚本：    .venv\Scripts\python -m services.user_init
 --
 -- 字符集统一 utf8mb4，避免昵称/车型中的 emoji 与中文乱码。
 -- =============================================================
@@ -21,7 +20,7 @@ USE chexiaozhi_user;
 -- -------------------------------------------------------------
 -- 1. users —— 账号与基础资料
 --    user_id 为对外稳定主键（契约里形如 user_10001 / guest_xxx），
---    由 B 在登录时生成；A 只消费这个 user_id。
+--    由登录接口生成；诊断链路只消费这个 user_id。
 --    phone 明文落库但对外只返回 phone_masked（见 03 §10.2/§10.4）。
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
@@ -57,7 +56,7 @@ CREATE TABLE IF NOT EXISTS user_privacy (
 
 -- -------------------------------------------------------------
 -- 3. user_vehicle —— 用户车辆资料（对应 GET/PATCH /api/user/vehicle）
---    字段与 A 的 /api/context 对齐；MVP 阶段两套存储分离，集成时再决定是否合库。
+--    字段与 /api/context 对齐；连调阶段 /api/context 优先读本表，失败再降级内存。
 --    vin 明文落库，对外是否展示遵守 user_privacy.show_vin，默认脱敏。
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS user_vehicle (
@@ -73,8 +72,7 @@ CREATE TABLE IF NOT EXISTS user_vehicle (
 
 -- -------------------------------------------------------------
 -- 4. user_stats —— 我的页统计（对应 GET /api/user/stats）
---    MVP 阶段由 B 维护/模拟；consult_count、receipt_count 等若要读 A 的真实数据，
---    先在 03 文档约定接口，再单独做集成，不直接改 A 的 services/context.py。
+--    consult_count、receipt_count 由咨询/维修记录保存接口递增。
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS user_stats (
   user_id         VARCHAR(64) NOT NULL,
@@ -89,7 +87,7 @@ CREATE TABLE IF NOT EXISTS user_stats (
 
 -- -------------------------------------------------------------
 -- 5. user_consultations —— 咨询记录快照（对应 GET/POST /api/user/consultations）
---    consultation_id 由 A 的 /api/chat 生成，B 使用它做幂等键。
+--    consultation_id 由 /api/chat 生成，保存接口使用它做幂等键。
 --    reply_snapshot/sources 保存当时的诊断结论和来源，历史详情不重新运行 Agent/RAG。
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS user_consultations (
@@ -111,7 +109,7 @@ CREATE TABLE IF NOT EXISTS user_consultations (
 
 -- -------------------------------------------------------------
 -- 6. user_repairs —— 维修记录快照（对应 GET/POST /api/user/repairs）
---    receipt_id 由 A 的 /api/receipt 生成，B 使用它做幂等键。
+--    receipt_id 由 /api/receipt 生成，保存接口使用它做幂等键。
 --    receipt_snapshot 保存当时的存根内容，服务重启后仍可查询。
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS user_repairs (
@@ -127,6 +125,22 @@ CREATE TABLE IF NOT EXISTS user_repairs (
   KEY idx_repairs_user_time (user_id, created_at),
   CONSTRAINT fk_repairs_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户维修记录快照';
+
+-- -------------------------------------------------------------
+-- 7. model_api_keys —— 大模型供应商密钥
+--    语音识别、图片识别、文字大模型调用前均从本表读取 Key。
+--    不在前端代码、后端源码或 .env 中保存真实 Key。
+-- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS model_api_keys (
+  provider   VARCHAR(32)  NOT NULL COMMENT '供应商标识，如 dashscope',
+  api_key    TEXT         NOT NULL COMMENT '供应商 API Key，仅服务端运行时读取',
+  enabled    TINYINT(1)   NOT NULL DEFAULT 1 COMMENT '是否启用',
+  remark     VARCHAR(128) NOT NULL DEFAULT '',
+  created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (provider),
+  KEY idx_model_api_keys_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='大模型供应商密钥';
 
 -- -------------------------------------------------------------
 -- 可选：本地联调用的演示账号（与 03 契约示例一致）。

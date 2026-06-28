@@ -1,4 +1,4 @@
-# routes/receipt.py —— 【B 角色】维修记录存根 /api/receipt
+# routes/receipt.py —— 维修记录存根 /api/receipt
 #
 # POST /api/receipt  根据用户已沉淀诊断项生成核销单，见总文档 6.4
 #   无诊断 → items=[]、total=0；有诊断 → items 非空、total>0

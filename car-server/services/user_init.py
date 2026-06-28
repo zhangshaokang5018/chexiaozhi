@@ -1,4 +1,4 @@
-"""Initialize the B-owned MySQL user database from sql/user_schema.sql.
+"""Initialize the MySQL user database from sql/user_schema.sql.
 
 Run from car-server:
     python -m services.user_init

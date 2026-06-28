@@ -1,4 +1,4 @@
-"""B-owned user-system service layer backed by MySQL."""
+"""User-system service layer backed by MySQL."""
 
 from __future__ import annotations
 

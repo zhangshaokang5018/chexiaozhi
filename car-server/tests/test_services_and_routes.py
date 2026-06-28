@@ -1,7 +1,8 @@
-# tests/test_services_and_routes.py —— A 的其余接口/服务
-# 覆盖：/api/ping、context+VIN 脱敏、/api/context、/api/kb 分页与详情、/api/asr 降级
+# tests/test_services_and_routes.py —— 后端通用接口/服务
+# 覆盖：/api/ping、context+VIN 脱敏、/api/context、/api/kb 分页与详情、/api/asr 契约
 
 import io
+from contextlib import contextmanager
 
 from services import context as ctx_service
 
@@ -46,6 +47,99 @@ def test_context_get_post_roundtrip(client):
     assert get.get_json()["location"] == "深圳"
 
 
+def test_context_prefers_mysql_vehicle(monkeypatch, client):
+    uid = "u_mysql_ctx"
+    ctx_service.update_context(
+        uid,
+        {
+            "car_model": "内存里的旧车",
+            "vin": "MEMORYVIN1234567",
+            "mileage": "1 km",
+            "location": "内存城市",
+        },
+    )
+    state = {
+        "users": {uid: {"user_id": uid}},
+        "user_vehicle": {
+            uid: {
+                "user_id": uid,
+                "car_model": "2024款 比亚迪 宋PLUS DM-i",
+                "vin": "LGXCG6DF9R1234567",
+                "mileage": "12,000 km",
+                "location": "上海",
+            }
+        },
+    }
+
+    class Cursor:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def execute(self, sql, params=None):
+            normalized = " ".join(sql.strip().split()).lower()
+            params = params or ()
+            self._one = None
+            if normalized.startswith("select * from users where user_id="):
+                self._one = state["users"].get(params[0])
+                return 1 if self._one else 0
+            if normalized.startswith("insert ignore into user_vehicle"):
+                state["user_vehicle"].setdefault(
+                    params[0],
+                    {"user_id": params[0], "car_model": "", "vin": "", "mileage": "", "location": ""},
+                )
+                return 1
+            if normalized.startswith("select * from user_vehicle where user_id="):
+                self._one = state["user_vehicle"].get(params[0])
+                return 1 if self._one else 0
+            if normalized.startswith("update user_vehicle set"):
+                values = list(params)
+                user_id = values.pop()
+                for assignment, value in zip(normalized.split(" set ", 1)[1].split(" where ", 1)[0].split(","), values):
+                    key = assignment.split("=", 1)[0].strip()
+                    state["user_vehicle"][user_id][key] = value
+                return 1
+            raise AssertionError(f"Unhandled SQL in fake context DB: {sql}")
+
+        def fetchone(self):
+            return self._one
+
+    class Conn:
+        def cursor(self):
+            return Cursor()
+
+        def commit(self):
+            return None
+
+        def rollback(self):
+            return None
+
+        def close(self):
+            return None
+
+    @contextmanager
+    def fake_connection():
+        yield Conn()
+
+    monkeypatch.setattr(ctx_service, "get_connection", fake_connection)
+
+    get = client.get("/api/context", query_string={"user_id": uid})
+    assert get.status_code == 200
+    data = get.get_json()
+    assert data["car_model"] == "2024款 比亚迪 宋PLUS DM-i"
+    assert data["location"] == "上海"
+    assert data["vin"].startswith("LGXC")
+    assert data["vin"].endswith("4567")
+    assert "*" in data["vin"]
+
+    post = client.post("/api/context", json={"user_id": uid, "location": "杭州"})
+    assert post.status_code == 200
+    assert post.get_json()["context"]["location"] == "杭州"
+    assert ctx_service.get_raw_context(uid)["vin"] == "LGXCG6DF9R1234567"
+
+
 # ---- 知识库分页与详情（A-T10） --------------------------------------------
 
 def test_kb_pagination(client):
@@ -78,15 +172,33 @@ def test_kb_detail_not_found_404(client):
     assert resp.status_code == 404
 
 
-# ---- ASR 降级（无 Key 仍能跑） ---------------------------------------------
+# ---- ASR 真实服务契约 -------------------------------------------------------
 
-def test_asr_degraded_returns_text(client):
+def test_asr_returns_transcribed_text_when_service_succeeds(monkeypatch, client):
+    def fake_transcribe(_path):
+        return {"text": "发动机怠速异响", "simulated": False, "model": "paraformer-realtime-v2", "error": None}
+
+    monkeypatch.setattr("routes.asr.asr.transcribe", fake_transcribe)
     data = {"file": (io.BytesIO(b"fake-audio-bytes"), "voice.mp3")}
     resp = client.post("/api/asr", data=data, content_type="multipart/form-data")
     assert resp.status_code == 200
     body = resp.get_json()
     assert body["ok"] is True
-    assert isinstance(body["text"], str) and body["text"]  # 文本非空（降级占位或真实识别）
+    assert body["text"] == "发动机怠速异响"
+    assert body["simulated"] is False
+
+
+def test_asr_error_is_not_fake_success(monkeypatch, client):
+    def fake_transcribe(_path):
+        return {"text": "", "simulated": False, "model": "paraformer-realtime-v2", "error": "数据库未配置 dashscope API Key"}
+
+    monkeypatch.setattr("routes.asr.asr.transcribe", fake_transcribe)
+    data = {"file": (io.BytesIO(b"fake-audio-bytes"), "voice.mp3")}
+    resp = client.post("/api/asr", data=data, content_type="multipart/form-data")
+    assert resp.status_code == 422
+    body = resp.get_json()
+    assert body["ok"] is False
+    assert body["text"] == ""
 
 
 def test_asr_missing_file_400(client):

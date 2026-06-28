@@ -5,7 +5,7 @@
 #
 # 返回：{ok, text, simulated, model, error}
 #   - text：识别出的文字（前端回填到输入框，用户确认后再发 /api/chat）
-#   - simulated：True 表示降级占位（未配置 Key 或识别失败），前端可给提示
+#   - simulated：保留兼容字段；真实调用链中始终为 False
 #
 # 注意：本接口不直接出诊断结论，只负责“语音→文字”。文字仍走 /api/chat 的意图路由。
 
@@ -26,7 +26,7 @@ _ALLOWED_EXT = (".mp3", ".wav", ".pcm", ".aac", ".m4a")
 def speech_to_text():
     file = request.files.get("file")
     if file is None or not file.filename:
-        return jsonify({"ok": False, "text": "", "simulated": True,
+        return jsonify({"ok": False, "text": "", "simulated": False,
                         "model": "none", "error": "未收到音频文件（字段名应为 file）"}), 400
 
     ext = os.path.splitext(file.filename)[1].lower()
@@ -41,9 +41,11 @@ def speech_to_text():
         file.save(tmp_path)
 
         result = asr.transcribe(tmp_path)
-        return jsonify({"ok": True, **result})
+        ok = bool(result.get("text")) and not result.get("error")
+        status = 200 if ok else 422
+        return jsonify({"ok": ok, **result}), status
     except Exception as e:
-        return jsonify({"ok": False, "text": "", "simulated": True,
+        return jsonify({"ok": False, "text": "", "simulated": False,
                         "model": "none", "error": f"服务端处理失败: {e}"}), 500
     finally:
         if tmp_path and os.path.exists(tmp_path):

@@ -1,8 +1,8 @@
-"""MySQL access layer for the B-owned user system.
+"""MySQL access layer for the user system.
 
-The module intentionally avoids connecting during import. A's main business can
-start without MySQL, and database failures are reported only when /api/user/*
-calls actually need the connection.
+The module intentionally avoids connecting during import. Diagnostics and
+knowledge endpoints can start without MySQL, and database failures are reported
+only when /api/user/* calls actually need the connection.
 """
 
 from __future__ import annotations
@@ -45,6 +45,7 @@ def _config() -> dict[str, Any]:
         "database": os.getenv("DB_NAME", "chexiaozhi_user"),
         "charset": "utf8mb4",
         "autocommit": False,
+        "connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", "2")),
     }
     missing = [key for key in ("user", "password", "database") if not cfg[key]]
     if missing:

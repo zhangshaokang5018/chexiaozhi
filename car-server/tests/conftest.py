@@ -9,6 +9,9 @@ import sys
 
 import pytest
 
+os.environ.setdefault("CXZ_DISABLE_LLM", "1")
+os.environ.setdefault("CXZ_DISABLE_RAG", "1")
+
 # car-server 根目录（本文件位于 car-server/tests/）
 _SERVER_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _SERVER_ROOT not in sys.path:
@@ -18,7 +21,7 @@ from app import create_app  # noqa: E402
 from services import context as ctx_service  # noqa: E402
 
 # 用例中可能用到的 user_id，跑前跑后都清掉，避免沉淀互相污染
-TEST_USER_IDS = ["test_user_001", "u_chat_receipt", "u_ctx", "guest_demo"]
+TEST_USER_IDS = ["test_user_001", "u_chat_receipt", "u_ctx", "u_mysql_ctx", "guest_demo"]
 
 
 @pytest.fixture()

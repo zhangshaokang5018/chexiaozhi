@@ -1,39 +1,40 @@
 .receipt-content {
-  height: calc(100vh - 88rpx - 78rpx - 128rpx);
+  height: calc(100vh - 88rpx - 78rpx);
 }
 
 .receipt-wrap {
-  padding: 0 0 20rpx;
+  padding: 20rpx 0 28rpx;
 }
 
-.receipt {
+.receipt-paper {
   position: relative;
   padding: 34rpx 28rpx;
-  border: 4rpx dashed #d97706;
-  border-radius: 24rpx;
+  border: 3rpx dashed #f59e0b;
+  border-radius: 22rpx;
   background: #fef3c7;
   color: #78350f;
   font-family: "Courier New", monospace;
-  font-size: 25rpx;
+  font-size: 24rpx;
+  box-shadow: 0 18rpx 48rpx rgba(0, 0, 0, .22);
 }
 
 .shop {
   text-align: center;
   font-size: 27rpx;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .shop-sub {
-  margin-top: 4rpx;
+  margin-top: 6rpx;
   color: #a16207;
   text-align: center;
-  font-size: 20rpx;
+  font-size: 19rpx;
   letter-spacing: 1rpx;
 }
 
-.hr {
+.dash {
   margin: 20rpx 0;
-  border-top: 3rpx dashed #d97706;
+  border-top: 2rpx dashed #d97706;
 }
 
 .line,
@@ -44,22 +45,34 @@
   padding: 8rpx 0;
 }
 
+.line text:first-child,
+.total text:first-child {
+  flex: 1;
+}
+
 .line text:last-child,
 .total text:last-child {
+  max-width: 60%;
   text-align: right;
+  word-break: break-all;
 }
 
 .section-label {
-  margin: 12rpx 0;
-  font-weight: 700;
+  margin: 10rpx 0;
+  color: #7c2d12;
+  font-weight: 900;
+}
+
+.item-line text:first-child {
+  max-width: 66%;
 }
 
 .total {
   margin-top: 16rpx;
   padding-top: 20rpx;
-  border-top: 4rpx solid #d97706;
-  font-size: 27rpx;
-  font-weight: 700;
+  border-top: 3rpx solid #d97706;
+  font-size: 26rpx;
+  font-weight: 900;
 }
 
 .total text:last-child {
@@ -69,15 +82,15 @@
 .stamp {
   position: absolute;
   right: 28rpx;
-  bottom: 78rpx;
-  padding: 10rpx 24rpx;
+  bottom: 76rpx;
+  padding: 10rpx 22rpx;
   border: 4rpx solid #fff;
-  border-radius: 12rpx;
+  border-radius: 10rpx;
   background: #ef4444;
   color: #fff;
-  transform: rotate(-10deg);
-  font-size: 24rpx;
-  font-weight: 700;
+  transform: rotate(-8deg);
+  font-size: 23rpx;
+  font-weight: 900;
   box-shadow: 0 4rpx 16rpx rgba(239, 68, 68, .4);
 }
 
@@ -85,12 +98,13 @@
   margin-top: 48rpx;
   color: #a16207;
   text-align: center;
-  font-size: 20rpx;
+  font-size: 19rpx;
   letter-spacing: 2rpx;
 }
 
 .receipt-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 18rpx;
   margin: 28rpx 0;
 }
@@ -118,7 +132,7 @@
   align-items: center;
   gap: 12rpx;
   padding: 48rpx 20rpx;
-  color: #64748b;
+  color: #92400e;
   text-align: center;
 }
 
@@ -128,5 +142,5 @@
 
 .empty-sub {
   font-size: 22rpx;
-  color: #94a3b8;
+  color: #a16207;
 }

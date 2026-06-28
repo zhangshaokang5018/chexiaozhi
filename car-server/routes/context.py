@@ -1,4 +1,4 @@
-# routes/context.py —— 【B 角色】车辆上下文 /api/context
+# routes/context.py —— 车辆上下文 /api/context
 #
 # GET  /api/context?user_id=  读取上下文（VIN 脱敏），见总文档 6.2
 # POST /api/context           更新上下文，见总文档 6.3

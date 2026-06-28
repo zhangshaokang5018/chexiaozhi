@@ -56,26 +56,27 @@ Page({
       })
   },
 
-  // 立即咨询：把该故障码暂存，切到咨询 tab 自动提问（A-T6 同款通道）
+  // 立即咨询：普通页面栈跳转并携带 ask 参数（A-T6 / A-T9N）
   goChat() {
-    try {
-      wx.setStorageSync('cxz_pending_ask', `${this.data.code} 是什么意思？`)
-    } catch (e) {
-      console.error('store pending ask failed', e)
-    }
-    wx.switchTab({ url: '/pages/chat/chat' })
+    const ask = this.data.code + ' 是什么意思？'
+    wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent(ask) })
   },
 
   goBack() {
-    wx.navigateBack()
+    const pages = getCurrentPages()
+    if (pages.length > 1) {
+      wx.navigateBack()
+      return
+    }
+    wx.reLaunch({ url: '/pages/index/index' })
   },
   goHome() {
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
   goKb() {
-    wx.switchTab({ url: '/pages/kb/kb' })
+    wx.navigateTo({ url: '/pages/kb/kb' })
   },
   goProfile() {
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
 })

@@ -1,89 +1,75 @@
-<view class="screen">
+<view class="screen home-screen">
   <view class="status-bar">
     <text>9:41</text>
     <text class="status-icons">📶 📡 🔋</text>
   </view>
 
   <view class="nav-bar">
-    <view class="nav-left"></view>
-    <view class="nav-title">汽车维修翻译官</view>
-    <view class="nav-right">⋯</view>
+    <view class="nav-left menu-trigger" bindtap="goProfile">☰</view>
+    <view class="nav-title">车小智</view>
+    <view class="nav-right"></view>
   </view>
 
-  <scroll-view class="content home-content" scroll-y>
-    <view class="banner">
-      <view class="banner-copy">
-        <text class="banner-title">遇到故障不用慌</text>
-        <text class="banner-desc">AI Agent 帮你解读症状、故障码和报价</text>
+  <scroll-view class="content home-content" scroll-y enhanced>
+    <view class="hero">
+      <view class="hero-copy">
+        <text class="hero-title">我是车小智</text>
+        <text class="hero-title">您的车况解读伙伴</text>
+        <text class="hero-desc">遇到故障不用慌，赶紧告诉我～</text>
       </view>
-      <text class="banner-car">🚗</text>
-    </view>
-
-    <view class="grid-4">
-      <view class="mini-card" bindtap="goChat">
-        <text class="emoji">🎙️</text>
-        <text class="label">描述症状</text>
-      </view>
-      <view class="mini-card" bindtap="goDetail" data-code="P0300">
-        <text class="emoji">⚠️</text>
-        <text class="label">故障码</text>
-      </view>
-      <view class="mini-card" bindtap="goChat">
-        <text class="emoji">📷</text>
-        <text class="label">拍照识别</text>
-      </view>
-      <view class="mini-card" bindtap="goChat">
-        <text class="emoji">💰</text>
-        <text class="label">报价审核</text>
+      <view class="hero-mascot">
+        <text>🚗</text>
       </view>
     </view>
 
-    <view class="card">
-      <view class="card-title">🚘 我的车辆 <text class="tag">{{context.car_tag}}</text></view>
-      <view class="vehicle-meta">
-        <text>里程 <text class="strong">{{context.mileage}}</text> · 所在地 <text class="strong">{{context.location}}</text></text>
-        <text>VIN <text class="mono">{{context.vin}}</text></text>
+    <view class="diagnosis-card" bindtap="askHot" data-ask="发动机黄灯亮是什么原因？">
+      <view class="diagnosis-head">
+        <text class="diagnosis-icon">⚡</text>
+        <text class="diagnosis-title">车况健康提醒</text>
       </view>
+      <text class="diagnosis-main">{{context.car_tag || '当前车辆'}} · 建议定期读取 OBD 故障码</text>
+      <text class="diagnosis-sub">点击让 Agent 帮你解释故障灯、症状和维修报价。</text>
     </view>
 
-    <view class="card">
-      <view class="card-title">⚡ 快速开始</view>
-      <view class="quick-item" bindtap="goChat">
-        <text class="quick-emoji">🔧</text>
-        <view class="quick-info">
-          <text class="quick-title">发动机咕噜咕噜响</text>
-          <text class="quick-desc">常见故障 · 点击立即咨询</text>
-        </view>
-        <text class="quick-arrow">›</text>
+    <view class="vehicle-card" bindtap="goProfile">
+      <view class="vehicle-title">
+        <text>🚘 当前车辆</text>
+        <text class="vehicle-badge">{{context.location || '未设置所在地'}}</text>
       </view>
-      <view class="quick-item" bindtap="goChat">
-        <text class="quick-emoji">🛞</text>
-        <view class="quick-info">
-          <text class="quick-title">刹车片磨损报警</text>
-          <text class="quick-desc">高紧急度 · 建议尽快处理</text>
-        </view>
-        <text class="quick-arrow">›</text>
-      </view>
-      <view class="quick-item" bindtap="goChat">
-        <text class="quick-emoji">💸</text>
-        <view class="quick-info">
-          <text class="quick-title">800元换机油机滤？</text>
-          <text class="quick-desc">报价是否合理 · 一键审核</text>
-        </view>
-        <text class="quick-arrow">›</text>
-      </view>
+      <view class="vehicle-row"><text>车型</text><text>{{context.car_model || '去我的页补充车型'}}</text></view>
+      <view class="vehicle-row"><text>里程</text><text>{{context.mileage || '未填写'}}</text></view>
+      <view class="vehicle-row"><text>VIN</text><text>{{context.vin || '未填写'}}</text></view>
     </view>
 
-    <view class="card">
-      <view class="card-title">🔥 热门故障</view>
-      <view class="hot-list">
-        <text class="hot-tag" bindtap="goDetail" data-code="P0300"><text class="rank">1</text>P0300 缺火</text>
-        <text class="hot-tag" bindtap="goChat"><text class="rank">2</text>怠速抖动</text>
-        <text class="hot-tag" bindtap="goChat"><text class="rank">3</text>刹车异响</text>
-        <text class="hot-tag" bindtap="goChat"><text class="rank">4</text>机油报警</text>
-        <text class="hot-tag" bindtap="goChat"><text class="rank">5</text>换挡顿挫</text>
-        <text class="hot-tag" bindtap="goChat"><text class="rank">6</text>水温过高</text>
-      </view>
+    <view class="section-title">🔥 热门咨询</view>
+    <view class="hot-questions">
+      <view class="hot-question" bindtap="askHot" data-ask="800 元换故障灯贵吗？"><text>1</text><view>800 元换故障灯贵吗</view><text class="arr">›</text></view>
+      <view class="hot-question" bindtap="askHot" data-ask="通用 OBD 故障码怎么解读？"><text>2</text><view>通用 OBD 故障码解读</view><text class="arr">›</text></view>
+      <view class="hot-question" bindtap="askHot" data-ask="我的特斯拉过保了去哪修？"><text>3</text><view>我的特斯拉过保了去哪修</view><text class="arr">›</text></view>
+      <view class="hot-question" bindtap="askHot" data-ask="充电桩显示握手失败，指示灯闪烁怎么办？"><text>4</text><view>充电桩显示握手失败，指示灯闪烁</view><text class="arr">›</text></view>
     </view>
+
+    <view class="home-space"></view>
   </scroll-view>
+
+  <view class="home-input-wrap">
+    <scroll-view class="home-quick-tabs" scroll-x enhanced show-scrollbar="{{false}}">
+      <text class="qt" bindtap="goCamera" data-label="仪表盘">💡 拍故障灯</text>
+      <text class="qt" bindtap="goCamera" data-label="报价单">📋 拍维修单</text>
+      <text class="qt" bindtap="askHot" data-ask="P0300 是什么意思">⚠️ 故障码</text>
+      <text class="qt" bindtap="goKb">🔧 维修指南</text>
+    </scroll-view>
+    <view class="home-input-row">
+      <button class="round-btn" bindtap="goCamera" data-label="仪表盘">📷</button>
+      <input
+        class="home-input"
+        value="{{inputText}}"
+        placeholder="快来描述你遇到的问题～ ✨"
+        confirm-type="send"
+        bindinput="onInput"
+        bindconfirm="sendHomeText"
+      />
+      <button class="round-btn send" bindtap="sendHomeText">🎤</button>
+    </view>
+  </view>
 </view>

@@ -21,6 +21,22 @@ def index():
             "ok": True,
             "name": APP_NAME,
             "version": APP_VERSION,
-            "endpoints": ["/api/ping", "/api/chat", "/api/context", "/api/receipt", "/api/kb/<kind>"],
+            "endpoints": [
+                "/api/ping",
+                "/api/chat",
+                "/api/chat/image",
+                "/api/asr",
+                "/api/context",
+                "/api/receipt",
+                "/api/kb/<kind>",
+                "/api/kb/<kind>/<item_id>",
+                "/api/user/login",
+                "/api/user/profile",
+                "/api/user/privacy",
+                "/api/user/stats",
+                "/api/user/vehicle",
+                "/api/user/consultations",
+                "/api/user/repairs",
+            ],
         }
     )

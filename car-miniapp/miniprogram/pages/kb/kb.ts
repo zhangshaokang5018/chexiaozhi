@@ -68,6 +68,17 @@ Page({
     this.loadKb(this.data.activeTab)
   },
 
+  quickSearch(event: WechatMiniprogram.TouchEvent) {
+    const keyword = String(event.currentTarget.dataset.keyword || '').trim()
+    const kind = String(event.currentTarget.dataset.kind || this.data.activeTab) as KbKind
+    this.setData({
+      activeTab: kind,
+      searchText: keyword,
+      highOnly: false,
+    })
+    this.loadKb(kind)
+  },
+
   refreshKb() {
     this.loadKb(this.data.activeTab)
   },
@@ -134,24 +145,27 @@ Page({
   askItem(event: WechatMiniprogram.TouchEvent) {
     const text = String(event.currentTarget.dataset.ask || '')
     if (!text) return
-    // chat 已是 tab 页，switchTab 不支持带参，改用 storage 暂存，chat onShow 消费（A-T6）
-    try {
-      wx.setStorageSync('cxz_pending_ask', text)
-    } catch (e) {
-      console.error('store pending ask failed', e)
+    wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent(text) })
+  },
+
+  goBack() {
+    const pages = getCurrentPages()
+    if (pages.length > 1) {
+      wx.navigateBack()
+      return
     }
-    wx.switchTab({ url: '/pages/chat/chat' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 
   goHome() {
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
 
   goChat() {
-    wx.switchTab({ url: '/pages/chat/chat' })
+    wx.navigateTo({ url: '/pages/chat/chat' })
   },
 
   goProfile() {
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
 })

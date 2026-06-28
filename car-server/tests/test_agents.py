@@ -109,18 +109,40 @@ def test_maintain_miss_does_not_fabricate(monkeypatch):
 
 # ---- part ------------------------------------------------------------------
 
-def test_part_image_mode_structured_simulation():
+def test_part_without_image_does_not_fabricate():
     r = part.handle("", {"image_label": "报价单", "mode": "image"})
     assert_common_contract(r, "part")
-    assert r["hit"] is True
-    assert r["confidence"] == 0.95
-    # 模拟识别价格留空 + 含“需核对实物”提示
+    assert r["hit"] is False
+    assert r["confidence"] == 0.0
     assert r["reply"]["price_range"] == []
-    joined = " ".join(b.get("text", "") + b.get("value", "") for b in r["reply"]["blocks"])
-    assert "核对" in joined
+    assert "上传图片" in r["reply"]["title"]
 
 
-def test_part_unknown_label_uses_default_hint():
-    r = part.handle("", {"image_label": "奇怪的东西", "mode": "image"})
+def test_part_with_image_calls_vision_service(monkeypatch):
+    def fake_analyze_vehicle_image(image_path, image_label="", text="", context=None):
+        return {
+            "agent": "part",
+            "agent_meta": part.AGENT_META,
+            "intent": part.INTENT,
+            "confidence": 0.9,
+            "hit": True,
+            "reply": {
+                "title": "图片识别 / 零件匹配",
+                "summary": f"{image_label}:{image_path}",
+                "blocks": [{"type": "kv", "label": "模型识别", "value": text or "ok"}],
+                "price_text": "",
+                "price_range": [],
+            },
+            "steps": [
+                {"name": "意图识别", "status": "done"},
+                {"name": "分发至 零件识别 Agent", "status": "done"},
+                {"name": "DashScope 视觉识别", "status": "done"},
+                {"name": "合成回复", "status": "done"},
+            ],
+        }
+
+    monkeypatch.setattr("agents.part.vision.analyze_vehicle_image", fake_analyze_vehicle_image)
+    r = part.handle("看下这个零件", {"image_label": "零件", "mode": "image", "image_path": "x.jpg"})
+    assert_common_contract(r, "part")
     assert r["hit"] is True
-    assert any(b.get("value") == "通用图片" for b in r["reply"]["blocks"])
+    assert "零件:x.jpg" in r["reply"]["summary"]

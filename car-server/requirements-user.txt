@@ -1,8 +1,8 @@
-# 用户体系（B）专属依赖 —— 与 A 的 requirements.txt 分开，避免共享文件冲突。
+# 用户体系专属依赖 —— 与主业务依赖分开，避免本地环境过重。
 # 安装：在已装好 requirements.txt 的同一个 .venv 里再执行：
 #   .venv\Scripts\python -m pip install -r requirements-user.txt
 #
-# 说明：A 的主业务不依赖以下任何库；只有 B 的 /api/user/* 用到 MySQL。
+# 说明：诊断、知识库、ASR 降级等主链路不依赖以下库；只有 /api/user/* 用到 MySQL。
 
 PyMySQL>=1.1        # MySQL 驱动（纯 Python，免编译，Windows 友好）
 python-dotenv>=1.0  # 读取 .env 中的 DB_* 连接配置

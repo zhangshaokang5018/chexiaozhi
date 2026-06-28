@@ -1,6 +1,6 @@
-# agents/dtc.py —— 【A 角色】故障码（DTC）解读 Agent
+# agents/dtc.py —— 故障码（DTC）解读 Agent
 #
-# 职责（总文档 7 / 05 A-T3）：
+# 职责：
 #   1. 从用户文本提取 [PBCU]\d{4} 故障码 → 精确查 kb_dtc 知识库
 #   2. 命中：给出释义(desc)、大白话(plain)、可能原因(cause)、风险等级(level 1-5)、价格区间
 #      level>=4 时输出红色 danger 强提醒
@@ -22,7 +22,7 @@
 import re
 
 from routes.kb import load_kb
-from services import rag
+from services import llm, rag
 
 # DTC 语义检索余弦距离阈值（与 routes/kb.py 保持一致）
 _DTC_RAG_MAX_DISTANCE = 0.55
@@ -122,6 +122,7 @@ def _build_hit(item: dict, code: str, steps: list, confidence: float) -> dict:
             "price_range": [total_low, total_high],
         },
         "steps": steps,
+        "sources": [{"kind": "dtc", "item_id": code, "title": item.get("desc", "")}],
         "receipt_item": receipt_item,
     }
 
@@ -157,14 +158,16 @@ def handle(text: str, context=None) -> dict:
     if code:
         item = _find_by_code(code, dtc_kb)
         if item is not None:
-            return _build_hit(item, code, _init_steps("代码精确命中"), 0.92)
+            result = _build_hit(item, code, _init_steps("代码精确命中"), 0.92)
+            return llm.enhance_agent_result("dtc", text, context or {}, result)
 
     # 2) RAG 语义检索（用专业描述或大白话检索）
     hits = rag.search("dtc", text, top_k=1, max_distance=_DTC_RAG_MAX_DISTANCE) or []
     if hits:
         item = hits[0]["item"]
         hit_code = str(item.get("code", code or "")).upper()
-        return _build_hit(item, hit_code, _init_steps("RAG 语义命中"), 0.8)
+        result = _build_hit(item, hit_code, _init_steps("RAG 语义命中"), 0.8)
+        return llm.enhance_agent_result("dtc", text, context or {}, result)
 
     # 3) 未命中：澄清（标记检索未命中）
     steps = _init_steps("未命中")

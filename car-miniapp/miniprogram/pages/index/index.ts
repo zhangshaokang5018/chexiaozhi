@@ -1,7 +1,9 @@
 import { getContext, getUserId } from '../../utils/request'
+import { chooseVehicleImage, isChooseMediaCancel } from '../../utils/media'
 
 Page({
   data: {
+    inputText: '',
     context: {
       car_model: '2022款 丰田 卡罗拉 1.2T 豪华版',
       car_tag: '丰田 卡罗拉',
@@ -39,13 +41,51 @@ Page({
   },
 
   goChat() {
-    wx.switchTab({ url: '/pages/chat/chat' })
+    wx.navigateTo({ url: '/pages/chat/chat' })
+  },
+  onInput(event: WechatMiniprogram.Input) {
+    this.setData({ inputText: event.detail.value })
+  },
+  sendHomeText() {
+    const text = (this.data.inputText || '').trim()
+    if (!text) {
+      wx.navigateTo({ url: '/pages/chat/chat' })
+      return
+    }
+    this.setData({ inputText: '' })
+    wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent(text) })
+  },
+  askHot(event: WechatMiniprogram.TouchEvent) {
+    const ask = String(event.currentTarget.dataset.ask || '').trim()
+    wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent(ask || '发动机咕噜咕噜响') })
+  },
+  askImage(event: WechatMiniprogram.TouchEvent) {
+    const label = String(event.currentTarget.dataset.label || '报价单')
+    if (label === '故障码') {
+      wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent('P0300 是什么意思') })
+      return
+    }
+    chooseVehicleImage(label)
+      .then((image) => {
+        wx.setStorageSync('cxz_pending_image', image)
+        wx.navigateTo({ url: '/pages/chat/chat' })
+      })
+      .catch((err) => {
+        if (!isChooseMediaCancel(err)) {
+          console.error('choose image failed', err)
+          wx.showToast({ title: '选择图片失败', icon: 'none' })
+        }
+      })
+  },
+  goCamera(event: WechatMiniprogram.TouchEvent) {
+    const label = String(event.currentTarget.dataset.label || '仪表盘')
+    wx.navigateTo({ url: '/pages/camera/camera?label=' + encodeURIComponent(label) })
   },
   goKb() {
-    wx.switchTab({ url: '/pages/kb/kb' })
+    wx.navigateTo({ url: '/pages/kb/kb' })
   },
   goProfile() {
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
   // A-T10：故障码入口 / 热门故障跳详情，带故障码参数
   goDetail(event: WechatMiniprogram.TouchEvent) {

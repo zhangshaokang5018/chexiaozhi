@@ -1,13 +1,14 @@
 .profile-content {
-  height: calc(100vh - 88rpx - 78rpx - 128rpx);
-  padding-top: 0;
+  height: calc(100vh - 88rpx - 78rpx);
+  padding: 0 28rpx 40rpx;
+  box-sizing: border-box;
 }
 
 .state-card,
 .login-card,
 .error-card {
-  margin-bottom: 22rpx;
-  padding: 28rpx;
+  margin: 28rpx 0 22rpx;
+  padding: 30rpx;
   border: 1rpx solid #334155;
   border-radius: 24rpx;
   background: #1e293b;
@@ -25,7 +26,7 @@
   margin-bottom: 10rpx;
   color: #f8fafc;
   font-size: 34rpx;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .login-copy {
@@ -38,24 +39,24 @@
 .profile-head {
   display: flex;
   align-items: center;
-  gap: 24rpx;
-  margin: 0 -28rpx 22rpx;
+  gap: 22rpx;
+  margin: 0 -12rpx 20rpx;
   padding: 34rpx 28rpx;
-  border-radius: 0 0 32rpx 32rpx;
-  background: #164e63;
+  border-radius: 26rpx;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  box-shadow: 0 18rpx 38rpx rgba(37, 99, 235, .22);
 }
 
 .avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 120rpx;
-  height: 120rpx;
+  width: 92rpx;
+  height: 92rpx;
   border-radius: 50%;
-  background: #fff;
-  color: #164e63;
-  font-size: 38rpx;
-  font-weight: 800;
+  background: rgba(255, 255, 255, .16);
+  border: 2rpx solid rgba(255, 255, 255, .32);
+  font-size: 42rpx;
 }
 
 .profile-main {
@@ -64,39 +65,19 @@
 }
 
 .name,
-.sub {
-  display: block;
-}
-
-.name {
-  color: #fff;
-  font-size: 34rpx;
-  font-weight: 700;
-}
-
 .name-input {
-  width: 100%;
-  min-height: 46rpx;
+  overflow: hidden;
   color: #fff;
-  font-size: 34rpx;
-  font-weight: 700;
+  font-size: 30rpx;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sub {
   margin-top: 6rpx;
-  color: rgba(255, 255, 255, .82);
-  font-size: 24rpx;
-}
-
-.small-btn {
-  width: 112rpx;
-  min-height: 58rpx;
-  padding: 0;
-  border-radius: 16rpx;
-  background: #f59e0b;
-  color: #111827;
-  font-size: 24rpx;
-  font-weight: 700;
+  color: rgba(255, 255, 255, .84);
+  font-size: 21rpx;
 }
 
 .stat-row {
@@ -107,9 +88,9 @@
 }
 
 .stat {
-  padding: 22rpx 10rpx;
+  padding: 20rpx 8rpx;
   border: 1rpx solid #334155;
-  border-radius: 24rpx;
+  border-radius: 14rpx;
   background: #1e293b;
   text-align: center;
 }
@@ -121,113 +102,68 @@
 
 .n {
   color: #60a5fa;
-  font-size: 38rpx;
-  font-weight: 800;
+  font-size: 30rpx;
+  font-weight: 900;
 }
 
 .l {
   margin-top: 6rpx;
   color: #94a3b8;
-  font-size: 22rpx;
+  font-size: 20rpx;
 }
 
+.car-card,
 .car-info,
 .repair-list,
 .menu-list {
   margin-bottom: 22rpx;
-  padding: 24rpx;
   border: 1rpx solid #334155;
   border-radius: 18rpx;
   background: #1e293b;
+  overflow: hidden;
+}
+
+.car-card,
+.car-info,
+.repair-list {
+  padding: 24rpx;
 }
 
 .car-title {
-  margin-bottom: 12rpx;
-  color: #f1f5f9;
+  margin-bottom: 16rpx;
+  color: #f8fafc;
   font-size: 26rpx;
-  font-weight: 700;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 120rpx minmax(0, 1fr);
-  align-items: center;
-  gap: 18rpx;
-  padding: 14rpx 0;
-  border-bottom: 1rpx solid #334155;
-  font-size: 24rpx;
-}
-
-.form-row text {
-  color: #94a3b8;
-}
-
-.form-row input {
-  min-height: 54rpx;
-  color: #f1f5f9;
-  text-align: right;
+  font-weight: 900;
 }
 
 .info-row {
   display: flex;
   justify-content: space-between;
-  gap: 18rpx;
-  padding: 10rpx 0;
-  font-size: 24rpx;
+  gap: 20rpx;
+  padding: 11rpx 0;
+  font-size: 23rpx;
+  line-height: 1.45;
 }
 
 .info-row text:first-child {
+  flex-shrink: 0;
   color: #94a3b8;
 }
 
 .info-row text:last-child {
-  color: #f1f5f9;
-  font-weight: 600;
-  text-align: right;
-}
-
-.repair-item {
-  padding: 18rpx 0;
-  border-bottom: 1rpx solid #334155;
-}
-
-.repair-item:last-child {
-  border-bottom: 0;
-}
-
-.repair-title,
-.repair-meta,
-.repair-summary,
-.empty-line {
-  display: block;
-}
-
-.repair-title {
   color: #f8fafc;
-  font-size: 26rpx;
   font-weight: 700;
-}
-
-.repair-meta,
-.repair-summary,
-.empty-line {
-  margin-top: 8rpx;
-  color: #94a3b8;
-  font-size: 22rpx;
-  line-height: 1.5;
-}
-
-.menu-list {
-  padding: 0;
-  overflow: hidden;
+  text-align: right;
+  word-break: break-all;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 28rpx 30rpx;
+  min-height: 88rpx;
+  padding: 0 28rpx;
   border-bottom: 1rpx solid #334155;
-  font-size: 26rpx;
+  font-size: 25rpx;
 }
 
 .menu-item:last-child {
@@ -236,20 +172,102 @@
 
 .emoji {
   width: 56rpx;
-  font-size: 34rpx;
+  font-size: 30rpx;
 }
 
 .label {
   flex: 1;
-  color: #e2e8f0;
+  color: #f1f5f9;
+  font-weight: 700;
 }
 
 .arrow {
   color: #64748b;
+  font-size: 30rpx;
+}
+
+.small-btn {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 22rpx;
+  height: 58rpx;
+  line-height: 58rpx;
+  border-radius: 999rpx;
+  background: rgba(15, 23, 42, .34);
+  color: #fff;
+  font-size: 22rpx;
+}
+
+.small-btn::after {
+  border: 0;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  min-height: 72rpx;
+  border-bottom: 1rpx solid #334155;
+  font-size: 23rpx;
+}
+
+.form-row text {
+  width: 112rpx;
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.form-row input {
+  flex: 1;
+  color: #f8fafc;
+  font-size: 23rpx;
+  text-align: right;
+}
+
+.ghost-btn {
+  margin-top: 20rpx;
+}
+
+.repair-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #334155;
+}
+
+.repair-item:last-child {
+  border-bottom: 0;
+}
+
+.repair-title {
+  color: #f8fafc;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.repair-meta {
+  color: #60a5fa;
+  font-size: 21rpx;
+}
+
+.repair-summary,
+.empty-line {
+  color: #94a3b8;
+  font-size: 22rpx;
+  line-height: 1.45;
+}
+
+.empty-line {
+  padding: 10rpx 0;
 }
 
 .badge {
-  color: #60a5fa;
-  font-size: 24rpx;
-  font-weight: 700;
+  min-width: 38rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 999rpx;
+  background: #3b82f6;
+  color: #fff;
+  text-align: center;
+  font-size: 20rpx;
 }

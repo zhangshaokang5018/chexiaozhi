@@ -1,4 +1,5 @@
 import { getReceipt, getUserId, ReceiptResp } from '../../utils/request'
+import { saveRepair as saveUserRepair } from '../../utils/user-api'
 
 Page({
   data: {
@@ -26,6 +27,7 @@ Page({
           isEmpty: !res.items || res.items.length === 0,
           loading: false,
         })
+        this.saveRepair(res)
       })
       .catch((err) => {
         console.error('load receipt failed', err)
@@ -34,6 +36,19 @@ Page({
           errorText: '存根加载失败，请确认后端服务已启动',
         })
       })
+  },
+
+  // 维修存根快照非阻塞保存；MySQL 不可用时不影响当前存根展示。
+  saveRepair(receipt: ReceiptResp) {
+    if (!receipt.receipt_id || !receipt.items || receipt.items.length === 0) return
+    const snapshot = {
+      user_id: getUserId(),
+      receipt_id: receipt.receipt_id,
+      receipt_snapshot: receipt,
+    }
+    saveUserRepair(snapshot).catch((err) => {
+      console.warn('save repair failed', err)
+    })
   },
 
   // 复制明细到剪贴板
@@ -65,18 +80,23 @@ Page({
   },
 
   goBack() {
-    wx.navigateBack()
+    const pages = getCurrentPages()
+    if (pages.length > 1) {
+      wx.navigateBack()
+      return
+    }
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
   goHome() {
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.reLaunch({ url: '/pages/index/index' })
   },
   goChat() {
-    wx.switchTab({ url: '/pages/chat/chat' })
+    wx.navigateTo({ url: '/pages/chat/chat' })
   },
   goKb() {
-    wx.switchTab({ url: '/pages/kb/kb' })
+    wx.navigateTo({ url: '/pages/kb/kb' })
   },
   goProfile() {
-    wx.switchTab({ url: '/pages/profile/profile' })
+    wx.navigateTo({ url: '/pages/profile/profile' })
   },
 })

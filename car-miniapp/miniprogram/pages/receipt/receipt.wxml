@@ -1,9 +1,9 @@
-<view class="screen">
+<view class="screen receipt-screen">
   <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
   <view class="nav-bar">
     <view class="nav-left" bindtap="goBack">‹</view>
     <view class="nav-title">维修记录存根</view>
-    <view class="nav-right">⤴</view>
+    <view class="nav-right"></view>
   </view>
 
   <scroll-view class="content receipt-content" scroll-y>
@@ -11,14 +11,14 @@
     <view wx:elif="{{errorText}}" class="state error">{{errorText}}</view>
 
     <view wx:elif="{{isEmpty}}" class="receipt-wrap">
-      <view class="receipt">
+      <view class="receipt-paper">
         <view class="shop">🏪 {{receipt.shop}}</view>
         <view class="shop-sub">统一社会信用代码 {{receipt.shop_code}}</view>
-        <view class="hr"></view>
+        <view class="dash"></view>
         <view class="empty-state">
           <text class="empty-emoji">🧾</text>
           <text>暂无维修存根</text>
-          <text class="empty-sub">完成一次报价/故障码诊断后，这里会自动生成维修明细存根。</text>
+          <text class="empty-sub">完成一次报价/故障码诊断后，这里会自动生成真实维修明细存根。</text>
         </view>
       </view>
       <view class="receipt-actions">
@@ -27,28 +27,31 @@
     </view>
 
     <view wx:else class="receipt-wrap">
-      <view class="receipt">
+      <view class="receipt-paper">
         <view class="shop">🏪 {{receipt.shop}}</view>
         <view class="shop-sub">统一社会信用代码 {{receipt.shop_code}}</view>
-        <view class="hr"></view>
+        <view class="dash"></view>
+        <view class="line"><text>工单号</text><text>{{receipt.receipt_id}}</text></view>
         <view class="line"><text>客户车辆</text><text>{{receipt.car_model}}</text></view>
         <view class="line"><text>VIN</text><text>{{receipt.vin}}</text></view>
-        <view class="line"><text>所在地</text><text>{{receipt.location}}</text></view>
-        <view class="line"><text>生成时间</text><text>{{receipt.created_at}}</text></view>
-        <view class="hr"></view>
+        <view class="line"><text>服务时间</text><text>{{receipt.created_at}}</text></view>
+        <view class="line"><text>服务门店</text><text>{{receipt.location || '本地门店'}}</text></view>
+        <view class="dash"></view>
         <view class="section-label">维修项目明细</view>
-        <view class="line" wx:for="{{receipt.items}}" wx:key="item" wx:for-item="it">
-          <text>{{index + 1}}. {{it.item}}（零件 {{it.part_range}} / 工时 {{it.labor_range}}）</text>
+        <view class="line item-line" wx:for="{{receipt.items}}" wx:key="item" wx:for-item="it">
+          <text>{{index + 1}}. {{it.item}}</text>
           <text>¥ {{it.avg}}</text>
         </view>
-        <view class="total"><text>预估合计</text><text>¥ {{receipt.total}}</text></view>
-        <view class="stamp" wx:if="{{receipt.simulated}}">✓ 模拟存根</view>
-        <view class="foot">※ 本存根由「汽车维修翻译官」自动生成 ※</view>
+        <view class="total"><text>预估合计（含税）</text><text>¥ {{receipt.total}}</text></view>
+        <view class="stamp" wx:if="{{receipt.simulated}}">已核销</view>
+        <view class="foot">※ 本存根由「车小智」自动生成 ※</view>
       </view>
+
       <view class="receipt-actions">
         <view class="ghost-btn" bindtap="copyDetail">📋 复制明细</view>
         <view class="primary-btn" bindtap="savePdf">💾 保存为 PDF</view>
       </view>
+
       <view class="card">
         <view class="card-title">⚠️ 维修后须知</view>
         <view class="after-note">
@@ -59,11 +62,4 @@
       </view>
     </view>
   </scroll-view>
-
-  <view class="tabbar">
-    <view class="tabbar-item" bindtap="goHome"><text class="tabbar-icon">🏠</text><text>首页</text></view>
-    <view class="tabbar-item" bindtap="goChat"><text class="tabbar-icon">💬</text><text>咨询</text></view>
-    <view class="tabbar-item" bindtap="goKb"><text class="tabbar-icon">📚</text><text>知识库</text></view>
-    <view class="tabbar-item" bindtap="goProfile"><text class="tabbar-icon">👤</text><text>我的</text></view>
-  </view>
 </view>

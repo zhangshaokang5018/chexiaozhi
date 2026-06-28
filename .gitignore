@@ -7,3 +7,4 @@ car-miniapp/node_modules/
 .env
 car-server/.env
 car-server/data/
+.localdb/

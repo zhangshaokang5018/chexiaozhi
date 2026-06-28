@@ -1,4 +1,4 @@
-# services/rag.py —— 【B 角色】本地 RAG 检索（sentence-transformers + 本地 Chroma）
+# services/rag.py —— 本地 RAG 检索（sentence-transformers + 本地 Chroma）
 #
 # 完全本地、离线运行，不需要任何 API Key：
 #   - Embedding：本地模型 BAAI/bge-small-zh-v1.5（中文检索）
@@ -120,6 +120,8 @@ def build_index() -> bool:
 
 def search(kind: str, query: str, top_k: int = 3, max_distance: float = None):
     """语义检索。返回 [{item, distance}]（distance 越小越相关）；不可用时返回 None。"""
+    if os.environ.get("CXZ_DISABLE_RAG") == "1":
+        return None
     if kind not in _RAG_KINDS:
         return None
     try:
