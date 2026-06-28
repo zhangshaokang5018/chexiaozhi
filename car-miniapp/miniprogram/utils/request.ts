@@ -299,14 +299,21 @@ export function asr(filePath: string): Promise<AsrResp> {
       filePath,
       name: 'file',
       success: (res) => {
+        let body: AsrResp | null = null
+        try {
+          body = JSON.parse(res.data) as AsrResp
+        } catch (e) {
+          body = null
+        }
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          try {
-            resolve(JSON.parse(res.data) as AsrResp)
-          } catch (e) {
+          if (body) {
+            resolve(body)
+          } else {
             reject(new Error('ASR 响应解析失败'))
           }
         } else {
-          reject(new Error(`HTTP ${res.statusCode}`))
+          const message = (body && body.error) || `HTTP ${res.statusCode}`
+          reject(new Error(message))
         }
       },
       fail: (err) => reject(err),

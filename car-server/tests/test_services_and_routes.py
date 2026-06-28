@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from urllib.parse import quote
 
 from services import context as ctx_service
+from services import asr as asr_service
 
 
 # ---- 健康检查（I-001） -----------------------------------------------------
@@ -214,6 +215,26 @@ def test_asr_error_is_not_fake_success(monkeypatch, client):
     body = resp.get_json()
     assert body["ok"] is False
     assert body["text"] == ""
+    assert body["error"] == "数据库未配置 dashscope API Key"
+
+
+def test_asr_detects_audio_format_from_header(tmp_path):
+    samples = {
+        "wav": b"RIFF\x24\x00\x00\x00WAVEfmt ",
+        "mp3": b"ID3\x04\x00\x00\x00\x00\x00\x21",
+        "m4a": b"\x00\x00\x00\x18ftypM4A ",
+        "amr": b"#!AMR\n",
+    }
+    for expected, content in samples.items():
+        audio = tmp_path / f"voice-{expected}.tmp"
+        audio.write_bytes(content)
+        assert asr_service.detect_audio_format(str(audio)) == expected
+
+
+def test_asr_extracts_text_from_dashscope_shapes():
+    assert asr_service._extract_sentence_text([{"text": "发动机"}, {"text": "异响"}]) == "发动机异响"
+    assert asr_service._extract_sentence_text({"sentences": [{"text": "刹车"}, {"text": "异响"}]}) == "刹车异响"
+    assert asr_service._extract_sentence_text({"text": "水温高"}) == "水温高"
 
 
 def test_asr_missing_file_400(client):

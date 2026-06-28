@@ -19,7 +19,7 @@ from services import asr
 asr_bp = Blueprint("asr", __name__)
 
 # 允许的音频后缀（与小程序录音常见格式对齐）
-_ALLOWED_EXT = (".mp3", ".wav", ".pcm", ".aac", ".m4a")
+_ALLOWED_EXT = (".mp3", ".wav", ".pcm", ".aac", ".m4a", ".amr")
 
 
 @asr_bp.post("/api/asr")

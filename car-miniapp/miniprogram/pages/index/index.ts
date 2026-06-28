@@ -241,7 +241,8 @@ Page({
       })
       .catch((err) => {
         console.error('asr failed', err)
-        wx.showToast({ title: '语音转写失败', icon: 'none' })
+        const message = err && err.message ? String(err.message) : '语音转写失败'
+        wx.showToast({ title: message.slice(0, 28), icon: 'none' })
       })
       .finally(() => {
         this.setData({ transcribing: false })

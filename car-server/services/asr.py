@@ -15,7 +15,28 @@ from services.secret_utils import redact_secret
 ASR_MODEL = os.environ.get("ASR_MODEL", "paraformer-realtime-v2")
 
 # 录音格式 → paraformer format 参数
-_EXT_FORMAT = {".wav": "wav", ".mp3": "mp3", ".pcm": "pcm", ".aac": "aac", ".m4a": "m4a"}
+_EXT_FORMAT = {".wav": "wav", ".mp3": "mp3", ".pcm": "pcm", ".aac": "aac", ".m4a": "m4a", ".amr": "amr"}
+
+
+def detect_audio_format(audio_path: str) -> str:
+    """Infer DashScope ASR format from file header first, then extension."""
+    try:
+        with open(audio_path, "rb") as f:
+            header = f.read(16)
+    except OSError:
+        header = b""
+
+    if header.startswith(b"RIFF") and header[8:12] == b"WAVE":
+        return "wav"
+    if header.startswith(b"ID3") or header[:2] == b"\xff\xfb" or header[:2] == b"\xff\xf3" or header[:2] == b"\xff\xf2":
+        return "mp3"
+    if header.startswith(b"#!AMR"):
+        return "amr"
+    if len(header) >= 12 and header[4:8] == b"ftyp":
+        return "m4a"
+    if header.startswith(b"ADIF") or header[:2] == b"\xff\xf1" or header[:2] == b"\xff\xf9":
+        return "aac"
+    return _guess_format(audio_path)
 
 
 def has_api_key() -> bool:
@@ -28,13 +49,26 @@ def _guess_format(audio_path: str) -> str:
     return _EXT_FORMAT.get(ext, "mp3")
 
 
+def _extract_sentence_text(value) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, dict):
+        if isinstance(value.get("text"), str):
+            return value["text"].strip()
+        sentences = value.get("sentences") or value.get("sentence") or value.get("output")
+        return _extract_sentence_text(sentences)
+    if isinstance(value, list):
+        return "".join(_extract_sentence_text(item) for item in value).strip()
+    return ""
+
+
 def _transcribe_with_dashscope(audio_path: str, api_key: str) -> dict:
     """调用阿里云百炼 paraformer 做真实语音识别。失败时抛异常。"""
     from dashscope.audio.asr import Recognition
 
     recognition = Recognition(
         model=ASR_MODEL,
-        format=_guess_format(audio_path),
+        format=detect_audio_format(audio_path),
         sample_rate=16000,
         api_key=api_key,
         callback=None,
@@ -42,12 +76,15 @@ def _transcribe_with_dashscope(audio_path: str, api_key: str) -> dict:
     result = recognition.call(file=audio_path)
 
     # 兼容 SDK 不同返回结构：拼接所有句子的 text
-    sentences = []
+    text = ""
     try:
-        sentences = result.get_sentence() or []
+        text = _extract_sentence_text(result.get_sentence())
     except Exception:
-        sentences = getattr(result, "output", {}) or []
-    text = "".join(s.get("text", "") for s in sentences if isinstance(s, dict)).strip()
+        text = ""
+    if not text:
+        text = _extract_sentence_text(getattr(result, "output", None))
+    if not text:
+        text = _extract_sentence_text(getattr(result, "message", None))
     return {"text": text, "simulated": False, "model": ASR_MODEL, "error": None}
 
 
