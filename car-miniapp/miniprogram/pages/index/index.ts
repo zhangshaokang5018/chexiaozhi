@@ -41,7 +41,7 @@ Page({
   },
 
   goChat() {
-    wx.navigateTo({ url: '/pages/chat/chat' })
+    wx.switchTab({ url: '/pages/chat/chat' })
   },
   onInput(event: WechatMiniprogram.Input) {
     this.setData({ inputText: event.detail.value })
@@ -49,26 +49,29 @@ Page({
   sendHomeText() {
     const text = (this.data.inputText || '').trim()
     if (!text) {
-      wx.navigateTo({ url: '/pages/chat/chat' })
+      wx.switchTab({ url: '/pages/chat/chat' })
       return
     }
     this.setData({ inputText: '' })
-    wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent(text) })
+    wx.setStorageSync('cxz_pending_ask', text)
+    wx.switchTab({ url: '/pages/chat/chat' })
   },
   askHot(event: WechatMiniprogram.TouchEvent) {
     const ask = String(event.currentTarget.dataset.ask || '').trim()
-    wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent(ask || '发动机咕噜咕噜响') })
+    wx.setStorageSync('cxz_pending_ask', ask || '发动机咕噜咕噜响')
+    wx.switchTab({ url: '/pages/chat/chat' })
   },
   askImage(event: WechatMiniprogram.TouchEvent) {
     const label = String(event.currentTarget.dataset.label || '报价单')
     if (label === '故障码') {
-      wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent('P0300 是什么意思') })
+      wx.setStorageSync('cxz_pending_ask', 'P0300 是什么意思')
+      wx.switchTab({ url: '/pages/chat/chat' })
       return
     }
     chooseVehicleImage(label)
       .then((image) => {
         wx.setStorageSync('cxz_pending_image', image)
-        wx.navigateTo({ url: '/pages/chat/chat' })
+        wx.switchTab({ url: '/pages/chat/chat' })
       })
       .catch((err) => {
         if (!isChooseMediaCancel(err)) {
@@ -82,10 +85,10 @@ Page({
     wx.navigateTo({ url: '/pages/camera/camera?label=' + encodeURIComponent(label) })
   },
   goKb() {
-    wx.navigateTo({ url: '/pages/kb/kb' })
+    wx.switchTab({ url: '/pages/kb/kb' })
   },
   goProfile() {
-    wx.navigateTo({ url: '/pages/profile/profile' })
+    wx.switchTab({ url: '/pages/profile/profile' })
   },
   // A-T10：故障码入口 / 热门故障跳详情，带故障码参数
   goDetail(event: WechatMiniprogram.TouchEvent) {

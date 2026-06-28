@@ -59,7 +59,8 @@ Page({
   // 立即咨询：普通页面栈跳转并携带 ask 参数（A-T6 / A-T9N）
   goChat() {
     const ask = this.data.code + ' 是什么意思？'
-    wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent(ask) })
+    wx.setStorageSync('cxz_pending_ask', ask)
+    wx.switchTab({ url: '/pages/chat/chat' })
   },
 
   goBack() {
@@ -68,15 +69,15 @@ Page({
       wx.navigateBack()
       return
     }
-    wx.reLaunch({ url: '/pages/index/index' })
+    wx.switchTab({ url: '/pages/index/index' })
   },
   goHome() {
-    wx.reLaunch({ url: '/pages/index/index' })
+    wx.switchTab({ url: '/pages/index/index' })
   },
   goKb() {
-    wx.navigateTo({ url: '/pages/kb/kb' })
+    wx.switchTab({ url: '/pages/kb/kb' })
   },
   goProfile() {
-    wx.navigateTo({ url: '/pages/profile/profile' })
+    wx.switchTab({ url: '/pages/profile/profile' })
   },
 })

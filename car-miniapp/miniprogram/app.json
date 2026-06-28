@@ -15,6 +15,18 @@
     "navigationBarTextStyle": "black",
     "navigationStyle": "custom"
   },
+  "tabBar": {
+    "color": "#8a8f99",
+    "selectedColor": "#1f6feb",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/chat/chat", "text": "咨询" },
+      { "pagePath": "pages/kb/kb", "text": "知识库" },
+      { "pagePath": "pages/profile/profile", "text": "我的" }
+    ]
+  },
   "style": "v2",
   "rendererOptions": {
     "skyline": {

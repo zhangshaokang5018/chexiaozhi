@@ -694,16 +694,11 @@ Page({
   noop() {},
 
   goHome() {
-    const pages = getCurrentPages()
-    if (pages.length > 1) {
-      wx.navigateBack()
-      return
-    }
-    wx.reLaunch({ url: '/pages/index/index' })
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   goKb() {
-    wx.navigateTo({ url: '/pages/kb/kb' })
+    wx.switchTab({ url: '/pages/kb/kb' })
   },
 
   goCamera(event: WechatMiniprogram.TouchEvent) {
@@ -712,6 +707,6 @@ Page({
   },
 
   goProfile() {
-    wx.navigateTo({ url: '/pages/profile/profile' })
+    wx.switchTab({ url: '/pages/profile/profile' })
   },
 })

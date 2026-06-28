@@ -145,7 +145,8 @@ Page({
   askItem(event: WechatMiniprogram.TouchEvent) {
     const text = String(event.currentTarget.dataset.ask || '')
     if (!text) return
-    wx.navigateTo({ url: '/pages/chat/chat?ask=' + encodeURIComponent(text) })
+    wx.setStorageSync('cxz_pending_ask', text)
+    wx.switchTab({ url: '/pages/chat/chat' })
   },
 
   goBack() {
@@ -154,18 +155,18 @@ Page({
       wx.navigateBack()
       return
     }
-    wx.reLaunch({ url: '/pages/index/index' })
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   goHome() {
-    wx.reLaunch({ url: '/pages/index/index' })
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   goChat() {
-    wx.navigateTo({ url: '/pages/chat/chat' })
+    wx.switchTab({ url: '/pages/chat/chat' })
   },
 
   goProfile() {
-    wx.navigateTo({ url: '/pages/profile/profile' })
+    wx.switchTab({ url: '/pages/profile/profile' })
   },
 })

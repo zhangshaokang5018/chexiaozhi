@@ -196,15 +196,15 @@ Page({
   },
 
   goHome() {
-    wx.navigateTo({ url: '/pages/index/index' })
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   goChat() {
-    wx.navigateTo({ url: '/pages/chat/chat' })
+    wx.switchTab({ url: '/pages/chat/chat' })
   },
 
   goKb() {
-    wx.navigateTo({ url: '/pages/kb/kb' })
+    wx.switchTab({ url: '/pages/kb/kb' })
   },
 
   goReceipt() {
