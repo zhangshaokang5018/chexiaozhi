@@ -31,16 +31,6 @@
       <text class="diagnosis-sub">点击让 Agent 帮你解释故障灯、症状和维修报价。</text>
     </view>
 
-    <view class="vehicle-card" bindtap="goProfile">
-      <view class="vehicle-title">
-        <text>🚘 当前车辆</text>
-        <text class="vehicle-badge">{{context.location || '未设置所在地'}}</text>
-      </view>
-      <view class="vehicle-row"><text>车型</text><text>{{context.car_model || '去我的页补充车型'}}</text></view>
-      <view class="vehicle-row"><text>里程</text><text>{{context.mileage || '未填写'}}</text></view>
-      <view class="vehicle-row"><text>VIN</text><text>{{context.vin || '未填写'}}</text></view>
-    </view>
-
     <view class="section-title">🔥 热门咨询</view>
     <view class="hot-questions">
       <view class="hot-question" bindtap="askHot" data-ask="800 元换故障灯贵吗？"><text>1</text><view>800 元换故障灯贵吗</view><text class="arr">›</text></view>
