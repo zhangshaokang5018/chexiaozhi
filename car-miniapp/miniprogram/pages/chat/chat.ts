@@ -220,6 +220,30 @@ function cloneChatResp(resp: ChatResp): ChatResp {
   return JSON.parse(JSON.stringify(resp)) as ChatResp
 }
 
+function safeSteps(value: ChatStep[] | undefined): ChatStep[] {
+  return Array.isArray(value) ? value : []
+}
+
+function safeReply(value: ChatReply | undefined): ChatReply {
+  if (!value) {
+    return {
+      title: '',
+      summary: '',
+      blocks: [],
+      price_text: '',
+      price_range: [],
+    }
+  }
+
+  return {
+    title: value.title || '',
+    summary: value.summary || '',
+    blocks: Array.isArray(value.blocks) ? value.blocks : [],
+    price_text: value.price_text || '',
+    price_range: Array.isArray(value.price_range) ? value.price_range : [],
+  }
+}
+
 Page({
   data: {
     loading: true,
@@ -520,8 +544,8 @@ Page({
         confidenceText: confidenceText(resp.route.confidence),
       },
       agentMeta: resp.agent_meta,
-      steps: resp.steps,
-      reply: resp.reply,
+      steps: safeSteps(resp.steps),
+      reply: safeReply(resp.reply),
       legal_note: resp.legal_note,
       error,
     }

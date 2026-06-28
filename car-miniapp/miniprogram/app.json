@@ -4,6 +4,8 @@
     "pages/chat/chat",
     "pages/kb/kb",
     "pages/profile/profile",
+    "pages/login/login",
+    "pages/privacy/privacy",
     "pages/receipt/receipt",
     "pages/detail/detail",
     "pages/logs/logs"

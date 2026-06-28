@@ -3,40 +3,60 @@
   <view class="nav-bar">
     <view class="nav-left"></view>
     <view class="nav-title">我的</view>
-    <view class="nav-right">⚙️</view>
+    <view class="nav-right" bindtap="goPrivacy">⚙️</view>
   </view>
 
   <scroll-view class="content profile-content" scroll-y>
-    <view class="profile-head">
-      <view class="avatar">🧑‍🔧</view>
-      <view>
-        <text class="name">车主 · 张先生</text>
-        <text class="sub">ID: u_8f3a1c · 已认证</text>
+    <view wx:if="{{loading}}" class="state-card">正在加载用户资料...</view>
+    <view wx:elif="{{!userId}}" class="login-card">
+      <view class="login-title">登录后查看个人数据</view>
+      <view class="login-copy">用户体系会保存昵称、车辆资料、隐私设置和我的页统计。</view>
+      <button class="primary-btn" bindtap="goLogin">登录 / 游客进入</button>
+    </view>
+    <view wx:else>
+      <view class="profile-head">
+        <view class="avatar">车</view>
+        <view class="profile-main">
+          <input class="name-input" value="{{profile.nickname}}" data-field="nickname" bindinput="onFieldInput" placeholder="填写昵称" />
+          <text class="sub">ID: {{profile.user_id}} · {{profile.profile_completed ? '资料已完善' : '待完善'}}</text>
+          <text class="sub" wx:if="{{profile.phone_masked}}">手机号 {{profile.phone_masked}}</text>
+        </view>
+        <button class="small-btn" bindtap="saveProfile" loading="{{saving}}">保存</button>
       </view>
-    </view>
 
-    <view class="stat-row">
-      <view class="stat"><text class="n">12</text><text class="l">咨询次数</text></view>
-      <view class="stat"><text class="n">8</text><text class="l">核销单</text></view>
-      <view class="stat"><text class="n">¥4.8k</text><text class="l">节省金额</text></view>
-    </view>
+      <view wx:if="{{errorText}}" class="error-card">{{errorText}}</view>
 
-    <view class="car-info">
-      <view class="car-title">🚘 当前车辆</view>
-      <view class="info-row"><text>车型</text><text>丰田 卡罗拉 1.2T</text></view>
-      <view class="info-row"><text>年款</text><text>2022 豪华版</text></view>
-      <view class="info-row"><text>里程</text><text>38,500 km</text></view>
-      <view class="info-row"><text>VIN</text><text>LFMAP22CXXX123456</text></view>
-      <view class="info-row"><text>所在地</text><text>北京</text></view>
-    </view>
+      <view class="stat-row">
+        <view class="stat"><text class="n">{{stats.consult_count}}</text><text class="l">咨询次数</text></view>
+        <view class="stat"><text class="n">{{stats.receipt_count}}</text><text class="l">维修记录</text></view>
+        <view class="stat"><text class="n">¥{{stats.estimated_saved}}</text><text class="l">预估节省</text></view>
+      </view>
 
-    <view class="menu-list">
-      <view class="menu-item" bindtap="goReceipt"><text class="emoji">🧾</text><text class="label">我的维修记录</text><text class="arrow">›</text></view>
-      <view class="menu-item"><text class="emoji">🚗</text><text class="label">车辆管理（切换车辆）</text><text class="arrow">›</text></view>
-      <view class="menu-item"><text class="emoji">⭐</text><text class="label">收藏的诊断结论</text><text class="arrow">›</text></view>
-      <view class="menu-item"><text class="emoji">🛡️</text><text class="label">附近授权维修点</text><text class="arrow">›</text></view>
-      <view class="menu-item"><text class="emoji">📞</text><text class="label">联系客服</text><text class="arrow">›</text></view>
-      <view class="menu-item"><text class="emoji">⚙️</text><text class="label">设置</text><text class="arrow">›</text></view>
+      <view class="car-info">
+        <view class="car-title">当前车辆</view>
+        <view class="form-row"><text>车型</text><input value="{{vehicle.car_model}}" data-field="car_model" bindinput="onFieldInput" placeholder="例如 2022款 丰田 卡罗拉" /></view>
+        <view class="form-row"><text>里程</text><input value="{{vehicle.mileage}}" data-field="mileage" bindinput="onFieldInput" placeholder="例如 38,500 km" /></view>
+        <view class="form-row"><text>VIN</text><input value="{{vehicle.vin}}" data-field="vin" bindinput="onFieldInput" placeholder="默认按隐私设置脱敏展示" /></view>
+        <view class="form-row"><text>所在地</text><input value="{{vehicle.location}}" data-field="location" bindinput="onFieldInput" placeholder="城市" /></view>
+        <button class="ghost-btn" bindtap="saveVehicle" loading="{{saving}}">保存车辆资料</button>
+      </view>
+
+      <view class="repair-list">
+        <view class="car-title">维修记录入口</view>
+        <view wx:if="{{repairs.length === 0}}" class="empty-line">暂无维修记录</view>
+        <view wx:for="{{repairs}}" wx:key="id" class="repair-item" bindtap="goReceipt">
+          <text class="repair-title">{{item.title}}</text>
+          <text class="repair-meta">{{item.created_at}} · ¥{{item.total}}</text>
+          <text class="repair-summary">{{item.summary}}</text>
+        </view>
+      </view>
+
+      <view class="menu-list">
+        <view class="menu-item" bindtap="goReceipt"><text class="emoji">🧾</text><text class="label">我的维修记录</text><text class="arrow">›</text></view>
+        <view class="menu-item" bindtap="goPrivacy"><text class="emoji">🔒</text><text class="label">隐私与私人信息</text><text class="arrow">›</text></view>
+        <view class="menu-item"><text class="emoji">⭐</text><text class="label">收藏的诊断结论</text><text class="badge">{{stats.favorite_count}}</text></view>
+        <view class="menu-item" bindtap="logout"><text class="emoji">↩</text><text class="label">退出登录</text><text class="arrow">›</text></view>
+      </view>
     </view>
   </scroll-view>
 

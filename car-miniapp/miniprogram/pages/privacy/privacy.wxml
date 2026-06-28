@@ -1,0 +1,58 @@
+<view class="screen privacy-screen">
+  <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
+  <view class="nav-bar">
+    <view class="nav-left" bindtap="goBack">‹</view>
+    <view class="nav-title">隐私设置</view>
+    <view class="nav-right"></view>
+  </view>
+
+  <scroll-view class="content privacy-content" scroll-y>
+    <view wx:if="{{loading}}" class="state-card">正在加载隐私设置...</view>
+    <view wx:elif="{{!userId}}" class="state-card">
+      <view class="state-title">未登录</view>
+      <view class="state-copy">登录后可以管理手机号授权、VIN 展示和数据保留时间。</view>
+      <button class="primary-btn" bindtap="goLogin">去登录</button>
+    </view>
+    <view wx:else>
+      <view wx:if="{{errorText}}" class="error-card">{{errorText}}</view>
+
+      <view class="privacy-card">
+        <view class="row">
+          <view>
+            <text class="row-title">手机号授权</text>
+            <text class="row-copy">接口只返回脱敏手机号。</text>
+          </view>
+          <switch checked="{{privacy.phone_authorized}}" data-field="phone_authorized" bindchange="onSwitch" color="#0f766e" />
+        </view>
+        <view class="row">
+          <view>
+            <text class="row-title">展示完整 VIN</text>
+            <text class="row-copy">关闭时车辆页和接口默认返回脱敏 VIN。</text>
+          </view>
+          <switch checked="{{privacy.show_vin}}" data-field="show_vin" bindchange="onSwitch" color="#0f766e" />
+        </view>
+        <view class="row">
+          <view>
+            <text class="row-title">诊断数据改进</text>
+            <text class="row-copy">仅保存开关状态，A 的诊断链路不在此页处理。</text>
+          </view>
+          <switch checked="{{privacy.share_diagnosis_for_improvement}}" data-field="share_diagnosis_for_improvement" bindchange="onSwitch" color="#0f766e" />
+        </view>
+      </view>
+
+      <view class="privacy-card">
+        <view class="picker-row">
+          <view>
+            <text class="row-title">数据保留时间</text>
+            <text class="row-copy">当前 {{privacy.data_retention_days}} 天</text>
+          </view>
+          <picker mode="selector" range="{{retentionOptions}}" bindchange="onRetentionChange">
+            <view class="picker-btn">选择</view>
+          </picker>
+        </view>
+      </view>
+
+      <button class="primary-btn" bindtap="savePrivacy" loading="{{saving}}">保存设置</button>
+    </view>
+  </scroll-view>
+</view>

@@ -15,6 +15,14 @@ const DEFAULT_TABS: TabItem[] = [
 // 每页条数（MVP 知识库数据量小，取较小值以演示「加载更多」分页）
 const PAGE_SIZE = 4
 
+function safeItems(value: KbItem[] | undefined): KbItem[] {
+  return Array.isArray(value) ? value : []
+}
+
+function safeTabs(value: TabItem[] | undefined, fallback: TabItem[]): TabItem[] {
+  return Array.isArray(value) && value.length ? value : fallback
+}
+
 Page({
   data: {
     activeTab: 'dtc' as KbKind,
@@ -74,11 +82,12 @@ Page({
       page_size: PAGE_SIZE,
     })
       .then((res: KbResp) => {
+        const items = safeItems(res.items)
         this.setData({
           activeTab: kind,
-          tabs: res.tabs && res.tabs.length ? res.tabs : this.data.tabs,
-          items: res.items,
-          total: res.total,
+          tabs: safeTabs(res.tabs, this.data.tabs),
+          items,
+          total: Number(res.total || items.length || 0),
           page: 1,
           loading: false,
           errorText: '',
@@ -88,6 +97,7 @@ Page({
         console.error('load kb failed', err)
         this.setData({
           loading: false,
+          items: [],
           errorText: '知识库加载失败，请确认后端服务已启动',
         })
       })
@@ -106,9 +116,10 @@ Page({
       page_size: PAGE_SIZE,
     })
       .then((res: KbResp) => {
+        const items = safeItems(res.items)
         this.setData({
-          items: this.data.items.concat(res.items),
-          total: res.total,
+          items: this.data.items.concat(items),
+          total: Number(res.total || this.data.items.length + items.length || 0),
           page: nextPage,
           loadingMore: false,
         })

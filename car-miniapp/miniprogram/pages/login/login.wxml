@@ -1,0 +1,20 @@
+<view class="screen login-screen">
+  <view class="status-bar"><text>9:41</text><text class="status-icons">📶 📡 🔋</text></view>
+  <view class="nav-bar">
+    <view class="nav-left" bindtap="goProfile">‹</view>
+    <view class="nav-title">登录</view>
+    <view class="nav-right"></view>
+  </view>
+
+  <view class="content">
+    <view class="login-panel">
+      <view class="brand-mark">车</view>
+      <view class="title">车小智账号</view>
+      <view class="copy">登录后同步用户资料、车辆信息、隐私设置和我的页统计。</view>
+      <view wx:if="{{userId}}" class="current-id">当前 user_id：{{userId}}</view>
+      <view wx:if="{{errorText}}" class="error-card">{{errorText}}</view>
+      <button class="primary-btn" bindtap="loginWechat" loading="{{loading}}">微信登录模拟</button>
+      <button class="ghost-btn" bindtap="loginGuest" loading="{{loading}}">游客模式</button>
+    </view>
+  </view>
+</view>
